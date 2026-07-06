@@ -40,6 +40,24 @@ Requires Node 24 (`.nvmrc` at the repo root, and the Makefile runs `nvm use 24`)
 | `make start` | Build, then serve the production build |
 | `make clean` | Remove `.next` |
 
+## Docker
+
+```bash
+docker compose up --build   # production build served on :3000
+```
+
+`NEXT_PUBLIC_API_URL` is baked into the client bundle at **build** time, so in Docker it's a build arg, not a runtime env var — changing it means rebuilding the image:
+
+```bash
+NEXT_PUBLIC_API_URL=https://api.example.com/api docker compose up --build
+# or building directly:
+docker build --build-arg NEXT_PUBLIC_API_URL=https://api.example.com/api -t paypath-frontend .
+```
+
+It defaults to `http://localhost:8000/api`. The browser makes these calls, so the URL must be reachable from wherever the page is viewed (the host), not from inside the Docker network — service names like `http://backend:8000` won't work.
+
+The image ships Next's standalone server, which requires `output: "standalone"` in `next.config.js` — if that setting is removed, the Dockerfile's `COPY .next/standalone` step fails.
+
 ## Layout
 
 ```

@@ -147,6 +147,18 @@ make kill      # kill process on port 8000
 make reset     # kill + clean
 ```
 
+## Docker
+
+```bash
+docker compose up --build   # from backend/: API on :8000
+```
+
+The compose file loads the API container's environment from `.env` in this directory (`cp .env.example .env` first — compose errors if it's missing). Every variable in the file is forwarded, including the optional `STRIPE_*` keys. `MONGODB_URI` must point at a reachable MongoDB (e.g. an Atlas URI); inside a container `localhost` is the container itself, so a Mongo running on the host is reached via `host.docker.internal` instead.
+
+Don't run this and the root-level stack at the same time — both publish :8000.
+
+To build just the image: `docker build -t paypath-backend .` — multi-stage build producing a static binary plus the `seed/` CSVs (read on first boot). The container listens on :8000 and honors `PORT`.
+
 ## Seed Data
 
 On first run (empty users collection), seeds a default user `user@email.com` / `userpassword` and loads CSV data from `seed/` with cached AI insights.

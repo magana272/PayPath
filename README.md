@@ -12,6 +12,23 @@ docs/       design notes
 
 ## Quick start
 
+### Docker (whole stack)
+
+```bash
+cp backend/.env.example backend/.env   # backend config — see variables below
+docker compose up --build
+```
+
+The backend container reads its config from `backend/.env` — point `MONGODB_URI` at your MongoDB (e.g. an Atlas URI). A `localhost` URI won't work from inside a container; use `host.docker.internal` to reach a Mongo running on the host.
+
+### Docker (fully local: backend + frontend + Mongo)
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.local.yml up --build
+```
+
+Adds a bundled MongoDB container and points the backend at it, overriding `MONGODB_URI` from `backend/.env` (everything else in the file still applies). Data persists in the `mongo_data` volume, and Mongo is published on `localhost:27017` for mongosh/Compass (`mongodb://admin:secret_password@localhost:27017`).
+
 ### 1. Backend (Go 1.22+)
 
 ```bash
