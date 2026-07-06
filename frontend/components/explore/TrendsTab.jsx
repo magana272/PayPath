@@ -3,6 +3,7 @@
 import { useMemo } from "react";
 import { GradientArea, DonutChart, RadialProgress, VerticalBar, COLORS } from "@/components/charts";
 import DataTable, { tableStyles } from "@/components/DataTable";
+import CalendarHeatmap from "@/components/explore/CalendarHeatmap";
 import { FREQ_MULT } from "@/lib/constants";
 import { simulateAvalanche, downsample } from "@/lib/simulate";
 import cg from "@/components/CardGrid.module.css";
@@ -14,7 +15,7 @@ const DEBT_TYPE_LABELS = {
   student_loan: "Student Loan",
 };
 
-export default function TrendsTab({ debts, summary, liquid, expenses }) {
+export default function TrendsTab({ debts, summary, liquid, expenses, heatmap }) {
   const expenseBreakdown = useMemo(() => (expenses || [])
     .map((e) => ({ name: e.expense, value: Math.round((e.cost || 0) * (FREQ_MULT[e.frequency] || 0) * 100) / 100 }))
     .filter((r) => r.value > 0)
@@ -169,6 +170,18 @@ export default function TrendsTab({ debts, summary, liquid, expenses }) {
           />
         ) : (
           <p style={{ color: "var(--text-muted)", fontFamily: "IBM Plex Mono, monospace", fontSize: 12 }}>Add debts and a positive monthly surplus to project the payoff breakdown.</p>
+        )}
+      </div>
+
+      <div className={es.chartContainer}>
+        <h2 className={es.chartTitle}>Cash Flow Heatmap{heatmap ? ` (${heatmap.year})` : ""}</h2>
+        {heatmap && Object.keys(heatmap.map).length > 0 ? (
+          <>
+            <CalendarHeatmap year={heatmap.year} map={heatmap.map} />
+            <p style={{ marginTop: 10, fontSize: 10, color: "var(--text-muted)", fontFamily: "IBM Plex Mono, monospace" }}>Green = income-heavy days · Red = bill-heavy days</p>
+          </>
+        ) : (
+          <p style={{ color: "var(--text-muted)", fontFamily: "IBM Plex Mono, monospace", fontSize: 12 }}>Loading calendar…</p>
         )}
       </div>
     </>
