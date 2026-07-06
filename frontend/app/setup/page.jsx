@@ -277,9 +277,9 @@ export default function SetupPage() {
         <div className={styles.nav}>
           <button className={styles.navBack} onClick={prev} disabled={step === 0}>← Back</button>
           <button className={styles.navSkip} onClick={() => router.push("/")}>Skip</button>
-          {step < STEPS.length - 1 && (
-            <button className={styles.navNext} onClick={next} disabled={saving}>Next →</button>
-          )}
+          <button className={styles.navNext} onClick={next} disabled={saving}>
+            {step < STEPS.length - 1 ? "Next →" : (saving ? "Saving..." : "Complete")}
+          </button>
         </div>
       </div>
     </div>
