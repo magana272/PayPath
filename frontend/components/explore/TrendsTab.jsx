@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { DonutChart, RadialProgress, VerticalBar, COLORS } from "@/components/charts";
+import { GradientArea, DonutChart, RadialProgress, VerticalBar, COLORS } from "@/components/charts";
 import DataTable, { tableStyles } from "@/components/DataTable";
 import { FREQ_MULT } from "@/lib/constants";
 import { simulateAvalanche, downsample } from "@/lib/simulate";
@@ -30,6 +30,24 @@ export default function TrendsTab({ debts, summary, liquid, expenses }) {
     return downsample(sim?.history || [], 40);
   }, [debts, summary]);
 
+  const netWorthSeries = useMemo(() => {
+    if (!summary) return [];
+    const surplus = summary.monthly_surplus || 0;
+    const sim = simulateAvalanche(debts, surplus > 0 ? surplus : 0, 0);
+    const history = sim?.history || [];
+    const horizon = Math.min(Math.max(history.length, 12), 48);
+    const base = new Date();
+    const fmt = (offset) => new Date(base.getFullYear(), base.getMonth() + offset, 1)
+      .toLocaleDateString("en-US", { month: "short", year: "2-digit" });
+    const series = [{ month: fmt(0), net_worth: Math.round(summary.net_worth || 0) }];
+    let nw = summary.net_worth || 0;
+    for (let m = 1; m <= horizon; m++) {
+      nw += surplus - (history[m - 1]?.monthInterest || 0);
+      series.push({ month: fmt(m), net_worth: Math.round(nw) });
+    }
+    return series;
+  }, [debts, summary]);
+
   const debtComposition = useMemo(() => {
     const byType = {};
     for (const d of debts || []) {
@@ -55,6 +73,15 @@ export default function TrendsTab({ debts, summary, liquid, expenses }) {
             <span style={{ fontSize: 10, color: "var(--text-muted)", fontFamily: "IBM Plex Mono, monospace" }}>of expenses covered · target 3–6</span>
           </div>
         </div>
+      </div>
+
+      <div className={es.chartContainer}>
+        <h2 className={es.chartTitle}>Net Worth Over Time (Projected)</h2>
+        {netWorthSeries.length > 1 ? (
+          <GradientArea data={netWorthSeries} dataKey="net_worth" xKey="month" referenceLine={0} referenceLabel="Break-even" height={300} color={COLORS[2]} />
+        ) : (
+          <p style={{ color: "var(--text-muted)", fontFamily: "IBM Plex Mono, monospace", fontSize: 12 }}>Not enough data to project net worth.</p>
+        )}
       </div>
 
       <div className={es.chartContainer}>
