@@ -11,6 +11,7 @@ import ExpensesSection from "@/components/dashboard/ExpensesSection";
 import DebtsSection from "@/components/dashboard/DebtsSection";
 import { SummaryCardsSkeleton, ListSectionSkeleton, DebtsSectionSkeleton } from "@/components/Skeleton";
 import ds from "./page.module.css";
+import sk from "@/components/Skeleton.module.css";
 
 export default function Dashboard() {
   const [jobs, setJobs] = useState(() => cache.get("income") || []);
@@ -18,13 +19,20 @@ export default function Dashboard() {
   const [expenses, setExpenses] = useState(() => cache.get("expenses") || []);
   const [debts, setDebts] = useState(() => cache.get("debts") || []);
   const [summary, setSummary] = useState(() => cache.get("summary"));
+  const [loaded, setLoaded] = useState(() => ({
+    income: cache.get("income") != null,
+    liquid: cache.get("liquid") != null,
+    expenses: cache.get("expenses") != null,
+    debts: cache.get("debts") != null,
+    summary: cache.get("summary") != null,
+  }));
 
   const loadData = useCallback(() => {
-    api.getIncome().then(setJobs);
-    api.getLiquid().then(setLiquid);
-    api.getExpenses().then(setExpenses);
-    api.getDebts().then(setDebts);
-    api.getSummary().then(setSummary);
+    api.getIncome().then((d) => { setJobs(d); setLoaded((l) => ({ ...l, income: true })); });
+    api.getLiquid().then((d) => { setLiquid(d); setLoaded((l) => ({ ...l, liquid: true })); });
+    api.getExpenses().then((d) => { setExpenses(d); setLoaded((l) => ({ ...l, expenses: true })); });
+    api.getDebts().then((d) => { setDebts(d); setLoaded((l) => ({ ...l, debts: true })); });
+    api.getSummary().then((d) => { setSummary(d); setLoaded((l) => ({ ...l, summary: true })); });
   }, []);
 
   useEffect(loadData, [loadData]);
@@ -48,31 +56,35 @@ export default function Dashboard() {
         </Link>
       </div>
 
-      {jobs.length > 0 && (
+      {!loaded.income ? (
+        <div className={ds.occupation}>
+          <span className={sk.bone} style={{ display: "inline-block", width: 180, height: 11 }} />
+        </div>
+      ) : jobs.length > 0 ? (
         <div className={ds.occupation}>
           {jobs.map((j) => j.job).join(" / ")}
         </div>
-      )}
+      ) : null}
 
-      {summary ? (
+      {loaded.summary ? (
         <SummaryCards summary={summary} />
       ) : (
         <SummaryCardsSkeleton />
       )}
 
-      {liquid.length > 0 ? (
+      {!loaded.liquid ? (
+        <ListSectionSkeleton rows={3} label={110} />
+      ) : liquid.length > 0 ? (
         <LiquidSection liquid={liquid} />
-      ) : !summary ? (
-        <ListSectionSkeleton rows={2} label={110} />
       ) : null}
 
-      {expenses.length > 0 ? (
+      {!loaded.expenses ? (
+        <ListSectionSkeleton rows={5} label={70} />
+      ) : expenses.length > 0 ? (
         <ExpensesSection expenses={expenses} />
-      ) : !summary ? (
-        <ListSectionSkeleton rows={3} label={70} />
       ) : null}
 
-      {summary ? (
+      {loaded.summary && loaded.debts ? (
         <DebtsSection debts={debts} summary={summary} />
       ) : (
         <DebtsSectionSkeleton />

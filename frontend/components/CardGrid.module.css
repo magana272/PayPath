@@ -15,7 +15,7 @@
 }
 
 .cardTitle {
-  font-family: "IBM Plex Mono", monospace;
+  font-family: var(--font-mono), monospace;
   font-size: 9px;
   font-weight: 400;
   color: var(--text-muted);
@@ -48,7 +48,7 @@
 }
 
 .sectionHeader {
-  font-family: "IBM Plex Mono", monospace;
+  font-family: var(--font-mono), monospace;
   font-size: 10px;
   font-weight: 600;
   color: var(--text);
@@ -61,7 +61,7 @@
 }
 
 .sectionSubheader {
-  font-family: "IBM Plex Mono", monospace;
+  font-family: var(--font-mono), monospace;
   font-size: 10px;
   font-weight: 500;
   color: var(--text-muted);

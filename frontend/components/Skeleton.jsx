@@ -31,7 +31,7 @@ export function ListSectionSkeleton({ rows = 3, label = 120 }) {
         <span><Bone width={55} height={10} /></span>
       </div>
       <div className={ds.list}>
-        {[65, 45, 55].slice(0, rows).map((w, i) => (
+        {[65, 45, 55, 50, 60].slice(0, rows).map((w, i) => (
           <div key={i} className={ds.listItem}>
             <Bone width={`${w}%`} height={12} />
             <Bone width={70} height={12} />
@@ -64,7 +64,7 @@ export function DebtsSectionSkeleton() {
         ))}
       </div>
       <div className={ds.list}>
-        {[70, 55, 60].map((w, i) => (
+        {[70, 55, 60, 50, 65].map((w, i) => (
           <div key={i} className={ds.listItem}>
             <Bone width={`${w}%`} height={12} />
             <Bone width={70} height={12} />

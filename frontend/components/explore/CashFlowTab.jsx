@@ -15,7 +15,7 @@ function BillTooltip({ active, payload, label }) {
       border: "1px solid #d0d3d9",
       padding: "8px 12px",
       fontSize: 11,
-      fontFamily: "IBM Plex Mono, monospace",
+      fontFamily: "var(--font-mono), monospace",
       color: "#131722",
       boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
     }}>

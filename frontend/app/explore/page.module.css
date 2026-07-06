@@ -80,7 +80,7 @@
 }
 
 .chartTitle {
-  font-family: "IBM Plex Mono", monospace;
+  font-family: var(--font-mono), monospace;
   font-size: 9px;
   font-weight: 600;
   margin-bottom: 12px;
@@ -97,7 +97,7 @@
 }
 
 .sliderLabel {
-  font-family: "IBM Plex Mono", monospace;
+  font-family: var(--font-mono), monospace;
   font-size: 14px;
   font-weight: 600;
   min-width: 80px;
@@ -107,7 +107,7 @@
 .sliderRange {
   display: flex;
   justify-content: space-between;
-  font-family: "IBM Plex Mono", monospace;
+  font-family: var(--font-mono), monospace;
   font-size: 9px;
   color: var(--text-muted);
   margin-top: 2px;
@@ -133,7 +133,7 @@
   align-items: center;
   gap: 8px;
   margin-top: 8px;
-  font-family: "IBM Plex Mono", monospace;
+  font-family: var(--font-mono), monospace;
   font-size: 10px;
   color: var(--text-muted);
 }

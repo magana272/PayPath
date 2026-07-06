@@ -47,11 +47,11 @@ function ChatBox() {
             <div className={ai.loading} style={{ justifyContent: "center" }}>
               <span className={ai.dot} /><span className={ai.dot} /><span className={ai.dot} />
             </div>
-            <p style={{ fontFamily: "IBM Plex Sans, sans-serif", fontSize: 13, color: "var(--text-muted)", marginTop: 12 }}>Analyzing...</p>
+            <p style={{ fontFamily: "var(--font-sans), sans-serif", fontSize: 13, color: "var(--text-muted)", marginTop: 12 }}>Analyzing...</p>
           </div>
         )}
         {active && !loading && active.error && (
-          <p style={{ padding: 20, color: "var(--red)", fontFamily: "IBM Plex Sans, sans-serif", fontSize: 13 }}>{active.error}</p>
+          <p style={{ padding: 20, color: "var(--red)", fontFamily: "var(--font-sans), sans-serif", fontSize: 13 }}>{active.error}</p>
         )}
         {active && !loading && !active.error && (
           <div style={{ padding: 16 }}>

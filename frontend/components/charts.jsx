@@ -17,7 +17,7 @@ const COLORS = [
 
 const axisStyle = {
   fontSize: 10,
-  fontFamily: "IBM Plex Mono, monospace",
+  fontFamily: "var(--font-mono), monospace",
   fill: "#8a8e96",
 };
 
@@ -25,7 +25,7 @@ const gridStyle = { stroke: "#e3e5ea", strokeDasharray: "none" };
 
 const labelStyle = {
   fontSize: 9,
-  fontFamily: "IBM Plex Mono, monospace",
+  fontFamily: "var(--font-mono), monospace",
   fill: "#8a8e96",
   textTransform: "uppercase",
   letterSpacing: "0.5px",
@@ -39,7 +39,7 @@ function ChartTooltip({ active, payload, label, prefix = "$", formatter }) {
       border: "1px solid #d0d3d9",
       padding: "8px 12px",
       fontSize: 11,
-      fontFamily: "IBM Plex Mono, monospace",
+      fontFamily: "var(--font-mono), monospace",
       color: "#131722",
       boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
     }}>
@@ -77,7 +77,7 @@ export const GradientArea = memo(function GradientArea({ data, dataKey, xKey = "
         </YAxis>
         <Tooltip content={tooltipContent || <ChartTooltip />} />
         {referenceLine != null && (
-          <ReferenceLine y={referenceLine} stroke="#f23645" strokeDasharray="4 3" strokeWidth={1} label={{ value: referenceLabel, fill: "#f23645", fontSize: 10, fontFamily: "IBM Plex Mono" }} />
+          <ReferenceLine y={referenceLine} stroke="#f23645" strokeDasharray="4 3" strokeWidth={1} label={{ value: referenceLabel, fill: "#f23645", fontSize: 10, fontFamily: "var(--font-mono)" }} />
         )}
         <Area type="monotone" dataKey={dataKey} stroke={color} strokeWidth={1.5} fill={noFill ? "none" : `url(#${gradientId})`} dot={dotRenderer || false} activeDot={{ r: 3, fill: color, stroke: "#fff", strokeWidth: 1 }} isAnimationActive={false} />
       </AreaChart>
@@ -110,7 +110,7 @@ export const StackedArea = memo(function StackedArea({ data, keys, xKey = "month
           </YAxis>
         )}
         <Tooltip content={<ChartTooltip />} />
-        <Legend verticalAlign="top" iconType="line" iconSize={12} wrapperStyle={{ fontSize: 10, fontFamily: "IBM Plex Mono", color: "#8a8e96", paddingBottom: 8 }} />
+        <Legend verticalAlign="top" iconType="line" iconSize={12} wrapperStyle={{ fontSize: 10, fontFamily: "var(--font-mono)", color: "#8a8e96", paddingBottom: 8 }} />
         {keys.map((key, i) => (
           <Area key={key} yAxisId={dualAxis ? "left" : undefined} type="linear" dataKey={key} stackId="1" stroke={COLORS[i % COLORS.length]} strokeWidth={1} fill={`url(#stack-${i})`} dot={false} isAnimationActive={false} />
         ))}
@@ -134,7 +134,7 @@ export const VerticalBar = memo(function VerticalBar({ data, bars, height = 300,
           {yLabel && <Label value={yLabel} angle={-90} position="insideLeft" offset={4} style={labelStyle} />}
         </YAxis>
         <Tooltip content={<ChartTooltip />} />
-        {bars.length > 1 && <Legend iconType="line" iconSize={12} wrapperStyle={{ fontSize: 10, fontFamily: "IBM Plex Mono", color: "#8a8e96", paddingTop: 8 }} />}
+        {bars.length > 1 && <Legend iconType="line" iconSize={12} wrapperStyle={{ fontSize: 10, fontFamily: "var(--font-mono)", color: "#8a8e96", paddingTop: 8 }} />}
         {bars.map((b, i) => (
           <Bar key={b.dataKey} dataKey={b.dataKey} name={b.name || b.dataKey} fill={b.color || COLORS[i]} radius={0} maxBarSize={40} stackId={stacked ? "a" : undefined} />
         ))}
@@ -153,7 +153,7 @@ export const DonutChart = memo(function DonutChart({ data, height = 300, valueKe
           ))}
         </Pie>
         <Tooltip content={<ChartTooltip />} />
-        <Legend iconType="line" iconSize={12} wrapperStyle={{ fontSize: 10, fontFamily: "IBM Plex Mono", color: "#8a8e96" }} />
+        <Legend iconType="line" iconSize={12} wrapperStyle={{ fontSize: 10, fontFamily: "var(--font-mono)", color: "#8a8e96" }} />
       </PieChart>
     </ResponsiveContainer>
   );
@@ -171,7 +171,7 @@ export function RadialProgress({ value, max, label, color = COLORS[0], size = 80
         <circle cx={center} cy={center} r={radius} fill="none" stroke="#e3e5ea" strokeWidth={3} />
         <circle cx={center} cy={center} r={radius} fill="none" stroke={color} strokeWidth={3} strokeLinecap="butt" strokeDasharray={circumference} strokeDashoffset={offset} style={{ transition: "stroke-dashoffset 0.6s ease" }} />
       </svg>
-      {label && <span style={{ fontSize: 9, color: "#8a8e96", fontFamily: "IBM Plex Mono", textTransform: "uppercase", letterSpacing: "0.5px" }}>{label}</span>}
+      {label && <span style={{ fontSize: 9, color: "#8a8e96", fontFamily: "var(--font-mono)", textTransform: "uppercase", letterSpacing: "0.5px" }}>{label}</span>}
     </div>
   );
 }
