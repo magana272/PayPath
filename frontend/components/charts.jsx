@@ -122,7 +122,7 @@ export const StackedArea = memo(function StackedArea({ data, keys, xKey = "month
   );
 });
 
-export const VerticalBar = memo(function VerticalBar({ data, bars, height = 300, xKey = "label", xLabel, yLabel }) {
+export const VerticalBar = memo(function VerticalBar({ data, bars, height = 300, xKey = "label", xLabel, yLabel, stacked }) {
   return (
     <ResponsiveContainer width="100%" height={height}>
       <BarChart data={data} margin={{ top: 8, right: 12, left: 4, bottom: xLabel ? 24 : 4 }} barGap={2}>
@@ -136,7 +136,7 @@ export const VerticalBar = memo(function VerticalBar({ data, bars, height = 300,
         <Tooltip content={<ChartTooltip />} />
         {bars.length > 1 && <Legend iconType="line" iconSize={12} wrapperStyle={{ fontSize: 10, fontFamily: "IBM Plex Mono", color: "#8a8e96", paddingTop: 8 }} />}
         {bars.map((b, i) => (
-          <Bar key={b.dataKey} dataKey={b.dataKey} name={b.name || b.dataKey} fill={b.color || COLORS[i]} radius={0} maxBarSize={40} />
+          <Bar key={b.dataKey} dataKey={b.dataKey} name={b.name || b.dataKey} fill={b.color || COLORS[i]} radius={0} maxBarSize={40} stackId={stacked ? "a" : undefined} />
         ))}
       </BarChart>
     </ResponsiveContainer>

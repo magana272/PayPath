@@ -1,9 +1,10 @@
 "use client";
 
 import { useMemo } from "react";
-import { DonutChart, RadialProgress, COLORS } from "@/components/charts";
+import { DonutChart, RadialProgress, VerticalBar, COLORS } from "@/components/charts";
 import DataTable, { tableStyles } from "@/components/DataTable";
 import { FREQ_MULT } from "@/lib/constants";
+import { simulateAvalanche, downsample } from "@/lib/simulate";
 import cg from "@/components/CardGrid.module.css";
 import es from "@/app/explore/page.module.css";
 
@@ -23,6 +24,11 @@ export default function TrendsTab({ debts, summary, liquid, expenses }) {
   const totalLiquid = (liquid || []).reduce((s, a) => s + a.balance, 0);
   const monthsCovered = summary && summary.monthly_expenses > 0 ? totalLiquid / summary.monthly_expenses : 0;
   const efColor = monthsCovered >= 3 ? COLORS[0] : monthsCovered >= 1 ? "#ca8a04" : COLORS[1];
+
+  const interestPrincipal = useMemo(() => {
+    const sim = simulateAvalanche(debts, summary?.monthly_surplus || 0, 0);
+    return downsample(sim?.history || [], 40);
+  }, [debts, summary]);
 
   const debtComposition = useMemo(() => {
     const byType = {};
@@ -118,6 +124,24 @@ export default function TrendsTab({ debts, summary, liquid, expenses }) {
           </>
         ) : (
           <p style={{ color: "var(--text-muted)", fontFamily: "IBM Plex Mono, monospace", fontSize: 12 }}>No expenses to show.</p>
+        )}
+      </div>
+
+      <div className={es.chartContainer}>
+        <h2 className={es.chartTitle}>Interest vs Principal per Payment</h2>
+        {interestPrincipal.length > 0 ? (
+          <VerticalBar
+            data={interestPrincipal}
+            xKey="month"
+            xLabel="Month"
+            stacked
+            bars={[
+              { dataKey: "monthInterest", name: "Interest", color: COLORS[1] },
+              { dataKey: "monthPrincipal", name: "Principal", color: COLORS[0] },
+            ]}
+          />
+        ) : (
+          <p style={{ color: "var(--text-muted)", fontFamily: "IBM Plex Mono, monospace", fontSize: 12 }}>Add debts and a positive monthly surplus to project the payoff breakdown.</p>
         )}
       </div>
     </>
