@@ -61,7 +61,33 @@ function IncomeFormFields({ form, setForm, cls }) {
   );
 }
 
-export { IncomeFormFields, EMPTY_FORM as INCOME_EMPTY_FORM, buildPayload as buildIncomePayload };
+const ONE_TIME_INCOME_EMPTY_FORM = { source: "", amount: "", date: "" };
+
+function buildOneTimeIncomePayload(form) {
+  return {
+    job: form.source,
+    pay_type: "salary",
+    annual_salary: parseFloat(form.amount),
+    pay_frequency: "one-time",
+    date: form.date || null,
+  };
+}
+
+function OneTimeIncomeFields({ form, setForm, cls }) {
+  const inputCls = cls?.input || "";
+  const rowCls = cls?.row || "";
+  return (
+    <>
+      <input className={inputCls} placeholder="Source (e.g. Sold couch, Client payment)" value={form.source} onChange={(e) => setForm({ ...form, source: e.target.value })} required />
+      <div className={rowCls}>
+        <input className={inputCls} type="number" step="0.01" placeholder="Amount" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} required />
+        <input className={inputCls} type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} required />
+      </div>
+    </>
+  );
+}
+
+export { IncomeFormFields, OneTimeIncomeFields, EMPTY_FORM as INCOME_EMPTY_FORM, ONE_TIME_INCOME_EMPTY_FORM, buildPayload as buildIncomePayload, buildOneTimeIncomePayload };
 
 export default function IncomeTab({ jobs, onReload }) {
   const [showAdd, setShowAdd] = useState(false);
