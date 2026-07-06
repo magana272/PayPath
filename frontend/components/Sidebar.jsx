@@ -8,7 +8,7 @@ import { api } from "@/lib/api";
 import { emitRefresh } from "@/lib/cache";
 import Modal, { modalStyles } from "./Modal";
 import ConfirmModal from "./ConfirmModal";
-import { IncomeFormFields, INCOME_EMPTY_FORM, buildIncomePayload } from "@/components/settings/IncomeTab";
+import { IncomeFormFields, INCOME_EMPTY_FORM, buildIncomePayload, OneTimeIncomeFields, ONE_TIME_INCOME_EMPTY_FORM, buildOneTimeIncomePayload } from "@/components/settings/IncomeTab";
 import { IconHome, IconSearch, IconPlus, IconCalendar, IconLogout } from "./Icons";
 import styles from "./Sidebar.module.css";
 
@@ -21,6 +21,11 @@ const links = [
 const EMPTY_BILL = { expense: "", cost: "", due_date: "", frequency: "monthly" };
 const EMPTY_PURCHASE = { expense: "", cost: "", date: "" };
 
+const todayStr = () => {
+  const t = new Date();
+  return `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, "0")}-${String(t.getDate()).padStart(2, "0")}`;
+};
+
 export default function Sidebar() {
   const pathname = usePathname();
   const { logout } = useAuth();
@@ -29,6 +34,8 @@ export default function Sidebar() {
   const [billForm, setBillForm] = useState({ ...EMPTY_BILL });
   const [purchaseForm, setPurchaseForm] = useState({ ...EMPTY_PURCHASE });
   const [incomeForm, setIncomeForm] = useState({ ...INCOME_EMPTY_FORM });
+  const [incomeMode, setIncomeMode] = useState("recurring");
+  const [oneTimeForm, setOneTimeForm] = useState({ ...ONE_TIME_INCOME_EMPTY_FORM, date: todayStr() });
   const [saving, setSaving] = useState(false);
   const [showLogout, setShowLogout] = useState(false);
 
@@ -38,6 +45,8 @@ export default function Sidebar() {
     setBillForm({ ...EMPTY_BILL });
     setPurchaseForm({ ...EMPTY_PURCHASE });
     setIncomeForm({ ...INCOME_EMPTY_FORM });
+    setIncomeMode("recurring");
+    setOneTimeForm({ ...ONE_TIME_INCOME_EMPTY_FORM, date: todayStr() });
   };
 
   const handleAddBill = async (e) => {
@@ -80,6 +89,18 @@ export default function Sidebar() {
     setSaving(true);
     try {
       await api.addIncome(buildIncomePayload(incomeForm));
+      closeAdd();
+      emitRefresh();
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleAddOneTimeIncome = async (e) => {
+    e.preventDefault();
+    setSaving(true);
+    try {
+      await api.addIncome(buildOneTimeIncomePayload(oneTimeForm));
       closeAdd();
       emitRefresh();
     } finally {
@@ -177,12 +198,31 @@ export default function Sidebar() {
             </button>
           </form>
         ) : (
-          <form className={modalStyles.form} onSubmit={handleAddIncome}>
-            <IncomeFormFields form={incomeForm} setForm={setIncomeForm} cls={{ row: modalStyles.formRow }} />
-            <button type="submit" className={modalStyles.submit} disabled={saving}>
-              {saving ? "Saving..." : "Add Job"}
-            </button>
-          </form>
+          <>
+            <div className={modalStyles.formRow} style={{ marginBottom: 8 }}>
+              <button type="button" className={incomeMode === "recurring" ? modalStyles.submitFlex : modalStyles.btnSecondary} onClick={() => setIncomeMode("recurring")}>
+                Job
+              </button>
+              <button type="button" className={incomeMode === "onetime" ? modalStyles.submitFlex : modalStyles.btnSecondary} onClick={() => setIncomeMode("onetime")}>
+                One-time
+              </button>
+            </div>
+            {incomeMode === "recurring" ? (
+              <form className={modalStyles.form} onSubmit={handleAddIncome}>
+                <IncomeFormFields form={incomeForm} setForm={setIncomeForm} cls={{ row: modalStyles.formRow }} />
+                <button type="submit" className={modalStyles.submit} disabled={saving}>
+                  {saving ? "Saving..." : "Add Job"}
+                </button>
+              </form>
+            ) : (
+              <form className={modalStyles.form} onSubmit={handleAddOneTimeIncome}>
+                <OneTimeIncomeFields form={oneTimeForm} setForm={setOneTimeForm} cls={{ row: modalStyles.formRow }} />
+                <button type="submit" className={modalStyles.submit} disabled={saving}>
+                  {saving ? "Saving..." : "Add Income"}
+                </button>
+              </form>
+            )}
+          </>
         )}
       </Modal>
 
