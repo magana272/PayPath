@@ -1,8 +1,9 @@
 "use client";
 
 import { useMemo } from "react";
-import { DonutChart, COLORS } from "@/components/charts";
+import { DonutChart, RadialProgress, COLORS } from "@/components/charts";
 import DataTable, { tableStyles } from "@/components/DataTable";
+import cg from "@/components/CardGrid.module.css";
 import es from "@/app/explore/page.module.css";
 
 const DEBT_TYPE_LABELS = {
@@ -11,7 +12,11 @@ const DEBT_TYPE_LABELS = {
   student_loan: "Student Loan",
 };
 
-export default function TrendsTab({ debts }) {
+export default function TrendsTab({ debts, summary, liquid }) {
+  const totalLiquid = (liquid || []).reduce((s, a) => s + a.balance, 0);
+  const monthsCovered = summary && summary.monthly_expenses > 0 ? totalLiquid / summary.monthly_expenses : 0;
+  const efColor = monthsCovered >= 3 ? COLORS[0] : monthsCovered >= 1 ? "#ca8a04" : COLORS[1];
+
   const debtComposition = useMemo(() => {
     const byType = {};
     for (const d of debts || []) {
@@ -27,8 +32,20 @@ export default function TrendsTab({ debts }) {
   const totalDebt = debtComposition.reduce((s, d) => s + d.value, 0);
 
   return (
-    <div className={es.chartContainer}>
-      <h2 className={es.chartTitle}>Debt Composition</h2>
+    <>
+      <div className={cg.grid}>
+        <div className={cg.card} style={{ display: "flex", alignItems: "center", gap: 16 }}>
+          <RadialProgress value={monthsCovered} max={6} color={efColor} size={72} />
+          <div>
+            <h3 className={cg.cardTitle}>Emergency Fund</h3>
+            <p className="big-number">{monthsCovered.toFixed(1)} mo</p>
+            <span style={{ fontSize: 10, color: "var(--text-muted)", fontFamily: "IBM Plex Mono, monospace" }}>of expenses covered · target 3–6</span>
+          </div>
+        </div>
+      </div>
+
+      <div className={es.chartContainer}>
+        <h2 className={es.chartTitle}>Debt Composition</h2>
       {debtComposition.length > 0 ? (
         <>
           <DonutChart data={debtComposition} height={300} />
@@ -60,6 +77,7 @@ export default function TrendsTab({ debts }) {
       ) : (
         <p style={{ color: "var(--text-muted)", fontFamily: "IBM Plex Mono, monospace", fontSize: 12 }}>No debt to show.</p>
       )}
-    </div>
+      </div>
+    </>
   );
 }

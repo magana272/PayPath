@@ -68,6 +68,7 @@ export default function Explore() {
   const [payoff, setPayoff] = useState(() => cache.get("payoff"));
   const [scenarios, setScenarios] = useState(() => cache.get("scenarios") || []);
   const [debts, setDebts] = useState(() => cache.get("debts") || []);
+  const [liquid, setLiquid] = useState(() => cache.get("liquid") || []);
   const [cashflow, setCashflow] = useState(() => cache.get("cashflow-90"));
   const [jobs, setJobs] = useState(() => cache.get("income"));
   const [extraPayment, setExtraPayment] = useState(0);
@@ -121,6 +122,11 @@ export default function Explore() {
     if ((tab === "pay" || tab === "tax") && !loaded.current.jobs) {
       loaded.current.jobs = true;
       api.getIncome().then(setJobs);
+    }
+
+    if (tab === "trends" && !loaded.current.trends) {
+      loaded.current.trends = true;
+      api.getLiquid().then(setLiquid);
     }
   }, [tab]);
 
@@ -210,7 +216,7 @@ export default function Explore() {
       {visited.trends && (
         <TabPanel active={tab === "trends"}>
           <Suspense fallback={<LoadingFallback />}>
-            <TrendsTab debts={debts} />
+            <TrendsTab debts={debts} summary={summary} liquid={liquid} />
           </Suspense>
         </TabPanel>
       )}
