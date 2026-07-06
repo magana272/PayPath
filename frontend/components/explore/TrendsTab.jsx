@@ -3,6 +3,7 @@
 import { useMemo } from "react";
 import { DonutChart, RadialProgress, COLORS } from "@/components/charts";
 import DataTable, { tableStyles } from "@/components/DataTable";
+import { FREQ_MULT } from "@/lib/constants";
 import cg from "@/components/CardGrid.module.css";
 import es from "@/app/explore/page.module.css";
 
@@ -12,7 +13,13 @@ const DEBT_TYPE_LABELS = {
   student_loan: "Student Loan",
 };
 
-export default function TrendsTab({ debts, summary, liquid }) {
+export default function TrendsTab({ debts, summary, liquid, expenses }) {
+  const expenseBreakdown = useMemo(() => (expenses || [])
+    .map((e) => ({ name: e.expense, value: Math.round((e.cost || 0) * (FREQ_MULT[e.frequency] || 0) * 100) / 100 }))
+    .filter((r) => r.value > 0)
+    .sort((a, b) => b.value - a.value), [expenses]);
+  const totalMonthlyExpense = expenseBreakdown.reduce((s, e) => s + e.value, 0);
+
   const totalLiquid = (liquid || []).reduce((s, a) => s + a.balance, 0);
   const monthsCovered = summary && summary.monthly_expenses > 0 ? totalLiquid / summary.monthly_expenses : 0;
   const efColor = monthsCovered >= 3 ? COLORS[0] : monthsCovered >= 1 ? "#ca8a04" : COLORS[1];
@@ -77,6 +84,41 @@ export default function TrendsTab({ debts, summary, liquid }) {
       ) : (
         <p style={{ color: "var(--text-muted)", fontFamily: "IBM Plex Mono, monospace", fontSize: 12 }}>No debt to show.</p>
       )}
+      </div>
+
+      <div className={es.chartContainer}>
+        <h2 className={es.chartTitle}>Expense Breakdown (Monthly)</h2>
+        {expenseBreakdown.length > 0 ? (
+          <>
+            <DonutChart data={expenseBreakdown} height={300} />
+            <DataTable>
+              <thead>
+                <tr><th>Expense</th><th>Monthly</th><th>Share</th></tr>
+              </thead>
+              <tbody>
+                {expenseBreakdown.map((e, i) => (
+                  <tr key={e.name}>
+                    <td>
+                      <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+                        <span className={es.colorDot} style={{ background: COLORS[i % COLORS.length] }} />
+                        {e.name}
+                      </span>
+                    </td>
+                    <td className={tableStyles.red}>${e.value.toLocaleString()}</td>
+                    <td>{((e.value / totalMonthlyExpense) * 100).toFixed(1)}%</td>
+                  </tr>
+                ))}
+                <tr className={es.trTotal}>
+                  <td>Total</td>
+                  <td className={tableStyles.red}>${totalMonthlyExpense.toLocaleString()}</td>
+                  <td>100%</td>
+                </tr>
+              </tbody>
+            </DataTable>
+          </>
+        ) : (
+          <p style={{ color: "var(--text-muted)", fontFamily: "IBM Plex Mono, monospace", fontSize: 12 }}>No expenses to show.</p>
+        )}
       </div>
     </>
   );
