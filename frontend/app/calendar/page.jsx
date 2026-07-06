@@ -27,6 +27,7 @@ export default function Calendar() {
   const [eventAction, setEventAction] = useState(null);
   const [editForm, setEditForm] = useState({});
   const [moveDate, setMoveDate] = useState("");
+  const [amountValue, setAmountValue] = useState("");
   const [saving, setSaving] = useState(false);
   const [expenses, setExpenses] = useState([]);
   const [income, setIncome] = useState([]);
@@ -173,6 +174,12 @@ export default function Calendar() {
     setEventAction("move");
   };
 
+  const openAmount = () => {
+    if (!activeEvent) return;
+    setAmountValue(String(activeEvent.ev.amount ?? ""));
+    setEventAction("amount");
+  };
+
   const handleEditSave = async (e) => {
     e.preventDefault();
     const source = findSourceItem(activeEvent.ev);
@@ -237,6 +244,34 @@ export default function Calendar() {
     }
   };
 
+  const handleAmountSave = async () => {
+    const source = findSourceItem(activeEvent.ev);
+    if (!source?.item || source.type !== "income") return;
+    const amt = parseFloat(amountValue);
+    if (isNaN(amt)) return;
+    setSaving(true);
+    try {
+      const evDate = `${year}-${String(month).padStart(2, "0")}-${String(activeEvent.day).padStart(2, "0")}`;
+      const existing = source.item.exceptions || [];
+      let found = false;
+      const exceptions = existing.map((ex) => {
+        if (ex.new_date === evDate || ex.original_date === evDate) {
+          found = true;
+          return { ...ex, amount: amt };
+        }
+        return ex;
+      });
+      if (!found) exceptions.push({ original_date: evDate, new_date: evDate, amount: amt });
+      await api.updateIncome(source.item.id, { exceptions });
+      setActiveEvent(null);
+      setEventAction(null);
+      loadCalendar();
+      emitRefresh();
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const handleDeleteEvent = async () => {
     const source = findSourceItem(activeEvent.ev);
     if (!source?.item) return;
@@ -261,6 +296,7 @@ export default function Calendar() {
     setEventAction(null);
     setEditForm({});
     setMoveDate("");
+    setAmountValue("");
   };
 
   return (
@@ -298,8 +334,12 @@ export default function Calendar() {
           saving={saving}
           openEdit={openEdit}
           openMove={openMove}
+          openAmount={openAmount}
+          amountValue={amountValue}
+          setAmountValue={setAmountValue}
           handleEditSave={handleEditSave}
           handleMoveSave={handleMoveSave}
+          handleAmountSave={handleAmountSave}
           handleDeleteEvent={handleDeleteEvent}
           closeEventModal={closeEventModal}
           findSourceItem={findSourceItem}
@@ -316,7 +356,7 @@ function CalendarContent({
   prevMonth, nextMonth, handleDayClick, handleDayKeyDown, handleAddBill,
   incomeForm, setIncomeForm, addingIncome, handleAddIncome, setSelectedDay,
   onEventClick, activeEvent, eventAction, editForm, setEditForm, moveDate, setMoveDate,
-  saving, openEdit, openMove, handleEditSave, handleMoveSave, handleDeleteEvent, closeEventModal, findSourceItem,
+  saving, openEdit, openMove, openAmount, amountValue, setAmountValue, handleEditSave, handleMoveSave, handleAmountSave, handleDeleteEvent, closeEventModal, findSourceItem,
 }) {
   const blanks = data.first_weekday;
   const cells = [];
@@ -505,8 +545,13 @@ function CalendarContent({
                 {activeEvent.ev.type === "payday" ? "+" : "-"}${activeEvent.ev.amount.toLocaleString()}
               </span>
             </div>
-            <div className={modalStyles.actions} style={{ marginTop: 16 }}>
-              <button className={modalStyles.submitFlex} onClick={openEdit} disabled={!activeSource?.item}>
+            <div className={modalStyles.actions} style={{ marginTop: 16, flexWrap: "wrap" }}>
+              {activeEvent.ev.type === "payday" && (
+                <button className={modalStyles.submitFlex} onClick={openAmount} disabled={!activeSource?.item}>
+                  Adjust Amount
+                </button>
+              )}
+              <button className={activeEvent.ev.type === "payday" ? modalStyles.btnSecondary : modalStyles.submitFlex} onClick={openEdit} disabled={!activeSource?.item}>
                 Edit
               </button>
               <button className={modalStyles.btnSecondary} onClick={openMove} disabled={!activeSource?.item}>
@@ -584,6 +629,22 @@ function CalendarContent({
               <input type="date" value={moveDate} onChange={(e) => setMoveDate(e.target.value)} required />
               <button type="submit" className={modalStyles.submit} disabled={saving || !moveDate}>
                 {saving ? "Moving..." : "Move Occurrence"}
+              </button>
+            </form>
+          </div>
+        )}
+      </Modal>
+
+      <Modal isOpen={eventAction === "amount"} onClose={closeEventModal} title={`Adjust — ${activeEvent?.ev.label || ""}`}>
+        {activeEvent && (
+          <div>
+            <p className={cal.dayDetailEmpty} style={{ marginBottom: 12 }}>
+              Set the actual amount earned on {data?.month_name} {activeEvent.day} (e.g. overtime or a short day). Only this occurrence changes.
+            </p>
+            <form className={modalStyles.form} onSubmit={(e) => { e.preventDefault(); handleAmountSave(); }}>
+              <input type="number" step="0.01" placeholder="Actual amount" value={amountValue} onChange={(e) => setAmountValue(e.target.value)} required />
+              <button type="submit" className={modalStyles.submit} disabled={saving || amountValue === ""}>
+                {saving ? "Saving..." : "Save Amount"}
               </button>
             </form>
           </div>
