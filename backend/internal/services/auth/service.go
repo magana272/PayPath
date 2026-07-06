@@ -11,6 +11,8 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+const ProtectedEmail = "user@email.com"
+
 var (
 	ErrMissingFields      = errors.New("email, password, and name are required")
 	ErrEmailTaken         = errors.New("email already registered")
@@ -19,6 +21,7 @@ var (
 	ErrInvalidToken       = errors.New("invalid token")
 	ErrTokenRevoked       = errors.New("token revoked")
 	ErrUserNotFound       = errors.New("user not found")
+	ErrProtectedAccount   = errors.New("this account cannot be deleted")
 )
 
 type Claims struct {
@@ -107,6 +110,16 @@ func (s *Service) Delete(token string) error {
 	claims, err := s.parseToken(token)
 	if err != nil {
 		return ErrInvalidToken
+	}
+	user, err := s.repo.GetUserByID(claims.UserID)
+	if err != nil {
+		return err
+	}
+	if user == nil {
+		return ErrUserNotFound
+	}
+	if user.Email == ProtectedEmail {
+		return ErrProtectedAccount
 	}
 	found, err := s.repo.DeleteUser(claims.UserID)
 	if err != nil {
