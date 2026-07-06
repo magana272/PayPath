@@ -314,6 +314,56 @@ func ProjectCashflow(liqs []liquid.Liquid, incomes []income.Income, exps []expen
 	return result
 }
 
+func clampDay(d, dim int) int {
+	if d > dim {
+		return dim
+	}
+	return d
+}
+
+func yearlyAnchor(e expenses.Expense) (int, int) {
+	if e.Date != nil {
+		if parsed, err := time.Parse("2006-01-02", *e.Date); err == nil {
+			return int(parsed.Month()), parsed.Day()
+		}
+	}
+	if e.DueDate != nil {
+		return 1, *e.DueDate
+	}
+	return 0, 0
+}
+
+func expenseOccursOn(e expenses.Expense, date time.Time, dim int) bool {
+	day := date.Day()
+	switch e.Frequency {
+	case "one-time":
+		if e.Date != nil {
+			return *e.Date == date.Format("2006-01-02")
+		}
+		if e.DueDate != nil {
+			return day == clampDay(*e.DueDate, dim)
+		}
+		return false
+	case "monthly":
+		if e.DueDate != nil {
+			return day == clampDay(*e.DueDate, dim)
+		}
+		return day == 1
+	case "biweekly":
+		return day == 1 || day == 15
+	case "weekly":
+		return day == 1 || day == 8 || day == 15 || day == 22 || day == 29
+	case "yearly":
+		anchorMonth, anchorDay := yearlyAnchor(e)
+		if anchorMonth == 0 {
+			return false
+		}
+		return int(date.Month()) == anchorMonth && day == clampDay(anchorDay, dim)
+	default:
+		return false
+	}
+}
+
 func computeBillMarkers(exps []expenses.Expense, start time.Time, days int) map[string][]CashflowBill {
 	result := make(map[string][]CashflowBill)
 	end := start.AddDate(0, 0, days)
@@ -333,26 +383,9 @@ func computeBillMarkers(exps []expenses.Expense, start time.Time, days int) map[
 		for i := 0; i < days; i++ {
 			date := start.AddDate(0, 0, i)
 			dateStr := date.Format("2006-01-02")
-			day := date.Day()
 			dim := time.Date(date.Year(), date.Month(), 1, 0, 0, 0, 0, time.UTC).AddDate(0, 1, -1).Day()
 
-			occurs := false
-			switch e.Frequency {
-			case "monthly":
-				if e.DueDate != nil {
-					dd := *e.DueDate
-					if dd > dim {
-						dd = dim
-					}
-					occurs = day == dd
-				}
-			case "biweekly":
-				occurs = day == 1 || day == 15
-			case "one-time":
-				if e.Date != nil {
-					occurs = *e.Date == dateStr
-				}
-			}
+			occurs := expenseOccursOn(e, date, dim)
 
 			if occurs && !movedAway[dateStr] {
 				result[dateStr] = append(result[dateStr], bill)
@@ -402,26 +435,14 @@ func BuildCalendar(year, month int, exps []expenses.Expense, incomes []income.In
 
 	for _, e := range exps {
 		expID := fmt.Sprintf("e_%d", e.ID)
-		switch e.Frequency {
-		case "one-time":
-			if e.DueDate != nil {
-				day := *e.DueDate
-				if day > daysInMonth {
-					day = daysInMonth
-				}
-				addEvent(day, CalendarEvent{Type: "purchase", Label: e.Expense, Amount: utils.Round2(e.Cost), ID: expID})
-			}
-		case "biweekly":
-			amt := utils.Round2(e.Cost)
-			addEvent(1, CalendarEvent{Type: "bill", Label: e.Expense, Amount: amt, ID: expID})
-			addEvent(15, CalendarEvent{Type: "bill", Label: e.Expense, Amount: amt, ID: expID})
-		case "monthly":
-			if e.DueDate != nil {
-				day := *e.DueDate
-				if day > daysInMonth {
-					day = daysInMonth
-				}
-				addEvent(day, CalendarEvent{Type: "bill", Label: e.Expense, Amount: utils.Round2(e.Cost), ID: expID})
+		evtType := "bill"
+		if e.Frequency == "one-time" {
+			evtType = "purchase"
+		}
+		for day := 1; day <= daysInMonth; day++ {
+			date := time.Date(year, time.Month(month), day, 0, 0, 0, 0, time.UTC)
+			if expenseOccursOn(e, date, daysInMonth) {
+				addEvent(day, CalendarEvent{Type: evtType, Label: e.Expense, Amount: utils.Round2(e.Cost), ID: expID})
 			}
 		}
 	}
