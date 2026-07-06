@@ -137,36 +137,36 @@ func seedLiquid(repo liquid.Repository, userID int, file string) {
 
 func seedInsights(repo insights.Repository, userID int) {
 	response := `{
-		"overview": "Your finances show a steady income from your Vet Assistant position at $19/hr, but high-interest credit card debt totaling over $17,000 is eating into your progress. With $78,000+ in total debt and only $1,864 in liquid savings, the priority should be aggressive debt payoff starting with your Capital One Savor card at 28.99% APR.",
-		"health_score": 42,
+		"overview": "Your finances are on a solid recovery track. Steady income from your Vet Assistant position at $24/hr, paired with disciplined credit card payoff, has brought total debt down to roughly $34,000 — now mostly lower-interest student loans and a car loan. The Capital One Savor is nearly cleared at $2,180, and you've built an $11,500 emergency fund covering about three months of expenses.",
+		"health_score": 71,
 		"strengths": [
-			"Consistent biweekly income provides predictable cash flow for budgeting",
-			"Student loan interest rates (8-10%) are lower than credit card rates, allowing strategic payoff ordering",
-			"You have a zero-interest Chase Slate balance of $119.70 that can be cleared quickly for a psychological win"
+			"Emergency fund of $11,500 covers roughly 3 months of expenses — right in the recommended range",
+			"High-interest revolving debt is nearly eliminated; only $2,180 remains on the Capital One Savor",
+			"Remaining balances are concentrated in lower-rate student loans (8-10%), which can be paid down strategically"
 		],
 		"warnings": [
-			"Capital One Savor card at 28.99% APR on $14,210 is generating roughly $343/month in interest alone",
-			"Liquid savings of $1,864 covers less than 1 month of expenses — well below the 3-6 month emergency fund target",
-			"Over 60% of monthly income is going toward debt minimums and fixed expenses, leaving minimal room for savings"
+			"The Capital One Savor at 28.99% APR still costs ~$53/month in interest — worth clearing to close out revolving debt entirely",
+			"Student loans total roughly $28,700 across four Earnest accounts and remain the largest obligation",
+			"The 10.58% Earnest Loan 4 is now your highest-rate remaining balance and should lead the payoff order"
 		],
 		"advice": [
 			{
-				"title": "Eliminate the Capital One Savor First",
-				"detail": "At 28.99% APR, your $14,210 Savor balance costs ~$343/month in interest. Every extra dollar toward this card has the highest return. Even an extra $100/month saves $1,200+ in interest over the payoff period."
+				"title": "Finish Off the Capital One Savor",
+				"detail": "At 28.99% APR, the remaining $2,180 Savor balance costs ~$53/month in interest. Clearing it this quarter eliminates your last revolving-credit interest entirely."
 			},
 			{
-				"title": "Clear the Chase Slate Immediately",
-				"detail": "Your $119.70 Chase Slate balance has 0% APR — pay it off this month to eliminate one account entirely and simplify your debt picture."
+				"title": "Roll Payments Into Earnest Loan 4",
+				"detail": "Once the Savor is gone, redirect that payment to the 10.58% Earnest Loan 4 ($9,600) — your highest remaining rate — before moving down the list."
 			},
 			{
-				"title": "Build a $1,000 Starter Emergency Fund",
-				"detail": "Before going all-in on debt, set aside $1,000 as a buffer so unexpected expenses don't force you back onto credit cards. You are $136 away from this milestone."
+				"title": "Keep the Emergency Fund Topped Up",
+				"detail": "Your $11,500 buffer already covers about 3 months of expenses. Maintain it as you accelerate debt payoff so an unexpected cost never sends you back to the cards."
 			}
 		],
 		"resources": [
 			{
 				"title": "Debt Avalanche Calculator",
-				"description": "Model how targeting your 28.99% Capital One balance first minimizes total interest paid across all 9 accounts."
+				"description": "Model how targeting your highest-rate balances first minimizes total interest paid across your remaining accounts."
 			},
 			{
 				"title": "r/personalfinance Prime Directive",
