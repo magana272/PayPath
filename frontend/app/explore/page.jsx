@@ -62,6 +62,34 @@ function LoadingFallback() {
   return <TabContentSkeleton />;
 }
 
+function buildPaydayFlow(events) {
+  const days = Object.keys(events || {}).map(Number).sort((a, b) => a - b);
+  let payDay = null, payAmount = 0, payLabel = "Paycheck";
+  for (const d of days) {
+    const pd = (events[d] || []).find((e) => e.type === "payday");
+    if (pd) { payDay = d; payAmount = pd.amount; payLabel = pd.label; break; }
+  }
+  if (payDay == null) return null;
+  let nextPay = null;
+  for (const d of days) {
+    if (d > payDay && (events[d] || []).some((e) => e.type === "payday")) { nextPay = d; break; }
+  }
+  const end = nextPay ?? Infinity;
+  const steps = [{ name: payLabel, value: Math.round(payAmount), type: "income" }];
+  let running = payAmount;
+  for (const d of days) {
+    if (d < payDay || d >= end) continue;
+    for (const e of (events[d] || [])) {
+      if (e.type === "bill" || e.type === "purchase") {
+        steps.push({ name: e.label, value: -Math.round(e.amount), type: "bill" });
+        running -= e.amount;
+      }
+    }
+  }
+  steps.push({ name: "Remaining", value: Math.round(running), type: "net" });
+  return steps;
+}
+
 export default function Explore() {
   const [tab, setTab] = useState("payoff");
   const [summary, setSummary] = useState(() => cache.get("summary"));
@@ -71,6 +99,7 @@ export default function Explore() {
   const [liquid, setLiquid] = useState(() => cache.get("liquid") || []);
   const [expenses, setExpenses] = useState(() => cache.get("expenses") || []);
   const [heatmap, setHeatmap] = useState(null);
+  const [paydayFlow, setPaydayFlow] = useState(null);
   const [cashflow, setCashflow] = useState(() => cache.get("cashflow-90"));
   const [jobs, setJobs] = useState(() => cache.get("income"));
   const [extraPayment, setExtraPayment] = useState(0);
@@ -141,6 +170,7 @@ export default function Explore() {
           });
         });
         setHeatmap({ year: hy, map: m });
+        setPaydayFlow(buildPaydayFlow(months[new Date().getMonth()]?.events || {}));
       });
     }
   }, [tab]);
@@ -231,7 +261,7 @@ export default function Explore() {
       {visited.trends && (
         <TabPanel active={tab === "trends"}>
           <Suspense fallback={<LoadingFallback />}>
-            <TrendsTab debts={debts} summary={summary} liquid={liquid} expenses={expenses} heatmap={heatmap} />
+            <TrendsTab debts={debts} summary={summary} liquid={liquid} expenses={expenses} heatmap={heatmap} paydayFlow={paydayFlow} />
           </Suspense>
         </TabPanel>
       )}

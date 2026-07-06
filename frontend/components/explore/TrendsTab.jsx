@@ -4,6 +4,7 @@ import { useMemo } from "react";
 import { GradientArea, DonutChart, RadialProgress, VerticalBar, COLORS } from "@/components/charts";
 import DataTable, { tableStyles } from "@/components/DataTable";
 import CalendarHeatmap from "@/components/explore/CalendarHeatmap";
+import PaydayWaterfall from "@/components/explore/PaydayWaterfall";
 import { FREQ_MULT } from "@/lib/constants";
 import { simulateAvalanche, downsample } from "@/lib/simulate";
 import cg from "@/components/CardGrid.module.css";
@@ -15,7 +16,7 @@ const DEBT_TYPE_LABELS = {
   student_loan: "Student Loan",
 };
 
-export default function TrendsTab({ debts, summary, liquid, expenses, heatmap }) {
+export default function TrendsTab({ debts, summary, liquid, expenses, heatmap, paydayFlow }) {
   const expenseBreakdown = useMemo(() => (expenses || [])
     .map((e) => ({ name: e.expense, value: Math.round((e.cost || 0) * (FREQ_MULT[e.frequency] || 0) * 100) / 100 }))
     .filter((r) => r.value > 0)
@@ -182,6 +183,18 @@ export default function TrendsTab({ debts, summary, liquid, expenses, heatmap })
           </>
         ) : (
           <p style={{ color: "var(--text-muted)", fontFamily: "IBM Plex Mono, monospace", fontSize: 12 }}>Loading calendar…</p>
+        )}
+      </div>
+
+      <div className={es.chartContainer}>
+        <h2 className={es.chartTitle}>Pay-Day Cash Flow</h2>
+        {paydayFlow && paydayFlow.length > 1 ? (
+          <>
+            <PaydayWaterfall steps={paydayFlow} />
+            <p style={{ marginTop: 10, fontSize: 10, color: "var(--text-muted)", fontFamily: "IBM Plex Mono, monospace" }}>How one paycheck is consumed by bills before the next payday</p>
+          </>
+        ) : (
+          <p style={{ color: "var(--text-muted)", fontFamily: "IBM Plex Mono, monospace", fontSize: 12 }}>No paydays this month to chart.</p>
         )}
       </div>
     </>
