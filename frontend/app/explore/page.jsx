@@ -37,11 +37,16 @@ const AIInsightsTab = lazy(() =>
   import("@/components/explore/AIInsightsTab")
 );
 
+const TrendsTab = lazy(() =>
+  import("@/components/explore/TrendsTab")
+);
+
 const TABS = [
   { id: "payoff", label: "Debt Payoff Plan" },
   { id: "cashflow", label: "Cash Flow (90 Days)" },
   { id: "pay", label: "Pay Breakdown" },
   { id: "tax", label: "Tax Breakdown" },
+  { id: "trends", label: "Trends" },
   { id: "ai", label: "PayPath AI" },
 ];
 
@@ -198,6 +203,14 @@ export default function Explore() {
             ) : (
               <LoadingFallback />
             )}
+          </Suspense>
+        </TabPanel>
+      )}
+
+      {visited.trends && (
+        <TabPanel active={tab === "trends"}>
+          <Suspense fallback={<LoadingFallback />}>
+            <TrendsTab debts={debts} />
           </Suspense>
         </TabPanel>
       )}
