@@ -273,12 +273,17 @@ function CalendarContent({
   for (let i = 0; i < blanks; i++) cells.push({ day: null });
   for (let d = 1; d <= data.days_in_month; d++) cells.push({ day: d, events: (data.events[d] || []).filter((e) => e.amount > 0) });
 
-  const allEvents = Object.values(data.events).flat();
-  const totalIncome = allEvents.filter(e => e.type === "payday").reduce((s, e) => s + e.amount, 0);
-  const totalBills = allEvents.filter(e => e.type === "bill").reduce((s, e) => s + e.amount, 0);
-
   const today = new Date();
   const isCurrentMonth = year === today.getFullYear() && month === today.getMonth() + 1;
+  const incomeCap = isCurrentMonth ? today.getDate() : Infinity;
+
+  const allEvents = Object.values(data.events).flat();
+  const totalIncome = Object.entries(data.events)
+    .filter(([day]) => Number(day) <= incomeCap)
+    .flatMap(([, events]) => events)
+    .filter(e => e.type === "payday")
+    .reduce((s, e) => s + e.amount, 0);
+  const totalBills = allEvents.filter(e => e.type === "bill").reduce((s, e) => s + e.amount, 0);
 
   const activeSource = activeEvent ? findSourceItem(activeEvent.ev) : null;
 
