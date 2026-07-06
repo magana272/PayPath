@@ -1,12 +1,13 @@
 "use client";
 
-import { useMemo, useDeferredValue, useRef, useState, useEffect, useLayoutEffect } from "react";
+import { useMemo, useDeferredValue, useState } from "react";
 import { simulateAvalanche, downsample, calcMinPayment } from "@/lib/simulate";
 import { GradientArea, StackedArea } from "@/components/charts";
+import DataTable, { tableStyles } from "@/components/DataTable";
 import styles from "@/components/CardGrid.module.css";
 import es from "@/app/explore/page.module.css";
 
-export default function DebtPayoffTab({ payoff: initialPayoff, scenarios, debts, extraPayment = 0, onExtraPaymentChange, stickyOffset = 0, active = true }) {
+export default function DebtPayoffTab({ payoff: initialPayoff, scenarios, debts, extraPayment = 0, onExtraPaymentChange, stickyOffset = 0 }) {
   const baseBudget = initialPayoff?.budget || 0;
   const sliderMax = Math.max(2000, Math.round(baseBudget * 3 / 50) * 50);
 
@@ -53,57 +54,28 @@ export default function DebtPayoffTab({ payoff: initialPayoff, scenarios, debts,
     ? initialPayoff.months - payoff.months
     : 0;
 
-  const sliderRef = useRef(null);
-  const [sliderHeight, setSliderHeight] = useState(0);
-  const showSlider = !!(payoff && !negativeBudget && debts?.length > 0);
+  const minSim = useMemo(
+    () => (debts?.length && totalMinPayments > 0 ? simulateAvalanche(debts, totalMinPayments, 0) : null),
+    [debts, totalMinPayments]
+  );
 
-  useLayoutEffect(() => {
-    const el = sliderRef.current;
-    if (!el) { setSliderHeight(0); return; }
+  const payoffSchedule = useMemo(() => {
+    if (!payoff?.history?.length || !debts?.length) return [];
+    return [...debts].sort((a, b) => b.apy - a.apy).map((d, i) => {
+      let month = null;
+      for (const row of payoff.history) {
+        if ((row[d.name] ?? 0) <= 0.01) { month = row.month; break; }
+      }
+      return { order: i + 1, name: d.name, apy: d.apy, balance: d.balance, month };
+    });
+  }, [payoff, debts]);
 
-    const measure = () => {
-      const cs = getComputedStyle(el);
-      const h  = parseFloat(cs.height) || 0;
-      const pt = parseFloat(cs.paddingTop) || 0;
-      const pb = parseFloat(cs.paddingBottom) || 0;
-      const bt = parseFloat(cs.borderTopWidth) || 0;
-      const bb = parseFloat(cs.borderBottomWidth) || 0;
-      setSliderHeight(Math.ceil(bt + pt + h + pb + bb));
-    };
-    measure();
-
-    const ro = new ResizeObserver(measure);
-    ro.observe(el, { box: "border-box" });
-    window.addEventListener("resize", measure);
-    return () => { ro.disconnect(); window.removeEventListener("resize", measure); };
-  }, [showSlider]);
+  const fmtMonths = (m) => m == null ? "—" : m >= 12 ? `${Math.floor(m / 12)}y ${m % 12}m` : `${m}mo`;
 
   const stickyTop = { top: stickyOffset };
-  const chartTop = stickyOffset + sliderHeight;
 
   const [balanceExpanded, setBalanceExpanded] = useState(false);
   const [totalDebtExpanded, setTotalDebtExpanded] = useState(true);
-  const totalDebtRef = useRef(null);
-
-  useEffect(() => {
-    const el = totalDebtRef.current;
-    if (!el || !active) return;
-    const update = () => {
-      const distance = el.getBoundingClientRect().top - chartTop;
-      const range = window.innerHeight - chartTop;
-      const t = 1 - Math.max(0, Math.min(distance / range, 1));
-      el.style.opacity = t;
-      el.style.transform = `translateY(${(1 - t) * 8}px)`;
-    };
-    update();
-    window.addEventListener("scroll", update, { passive: true });
-    return () => window.removeEventListener("scroll", update);
-  }, [hasHistory, chartTop, active]);
-
-  const chartStickyStyle = {
-    top: chartTop,
-    "--chart-top": `${chartTop}px`,
-  };
 
   return (
     <>
@@ -167,7 +139,7 @@ export default function DebtPayoffTab({ payoff: initialPayoff, scenarios, debts,
       )}
 
       {payoff && !negativeBudget && debts?.length > 0 && (
-        <div className={es.stickySection} style={{ ...stickyTop, zIndex: 41 }} ref={sliderRef}>
+        <div className={es.stickySection} style={{ ...stickyTop, zIndex: 41 }}>
           <h2 className={es.chartTitle}>Extra Monthly Payment</h2>
           <div className={es.sliderRow}>
             <input
@@ -219,7 +191,7 @@ export default function DebtPayoffTab({ payoff: initialPayoff, scenarios, debts,
             </div>
           )}
 
-          <div ref={totalDebtRef} className={`${es.stickySection} ${es.chartDropdown}`} style={{ top: chartTop, "--chart-top": `${chartTop}px`, zIndex: 41 }} onClick={() => setTotalDebtExpanded((v) => !v)}>
+          <div className={`${es.chartContainer} ${es.chartDropdown}`} onClick={() => setTotalDebtExpanded((v) => !v)}>
             <h2 className={`${es.chartTitle} ${es.chartToggle}`}>
               Total Debt Over Time <span className={es.expandIcon}>{totalDebtExpanded ? "−" : "+"}</span>
             </h2>
@@ -227,6 +199,53 @@ export default function DebtPayoffTab({ payoff: initialPayoff, scenarios, debts,
           {totalDebtExpanded && (
             <div className={es.chartContainer}>
               <GradientArea data={totalDebtData} dataKey="total" height={280} color="#c41e1e" xLabel="Month" yLabel="Total Owed" noFill />
+            </div>
+          )}
+
+          {payoffSchedule.length > 0 && (
+            <div className={es.chartContainer}>
+              <h2 className={es.chartTitle}>Payoff Schedule (Avalanche Order)</h2>
+              <DataTable>
+                <thead>
+                  <tr><th>#</th><th>Debt</th><th>APR</th><th>Balance</th><th>Paid Off</th></tr>
+                </thead>
+                <tbody>
+                  {payoffSchedule.map((d) => (
+                    <tr key={d.name}>
+                      <td>{d.order}</td>
+                      <td>{d.name}</td>
+                      <td>{d.apy}%</td>
+                      <td className={tableStyles.red}>${Math.round(d.balance).toLocaleString()}</td>
+                      <td>{fmtMonths(d.month)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </DataTable>
+            </div>
+          )}
+
+          {minSim && (
+            <div className={es.chartContainer}>
+              <h2 className={es.chartTitle}>Minimums vs. Your Plan</h2>
+              <div className={styles.grid}>
+                <div className={`${styles.card} ${styles.danger}`}>
+                  <h3 className={styles.cardTitle}>Paying Minimums Only</h3>
+                  <p className="big-number">{minSim.months < 480 ? `${Math.floor(minSim.months / 12)}y ${minSim.months % 12}m` : "40y+"}</p>
+                  <span style={{ fontSize: 11, color: "var(--text-muted)", fontFamily: "IBM Plex Mono, monospace" }}>${Math.round(minSim.total_interest).toLocaleString()} interest</span>
+                </div>
+                <div className={`${styles.card} ${styles.accent}`}>
+                  <h3 className={styles.cardTitle}>Your Plan</h3>
+                  <p className="big-number">{didConverge ? `${Math.floor(payoff.months / 12)}y ${payoff.months % 12}m` : "40y+"}</p>
+                  <span style={{ fontSize: 11, color: "var(--text-muted)", fontFamily: "IBM Plex Mono, monospace" }}>${Math.round(payoff.total_interest).toLocaleString()} interest</span>
+                </div>
+                {didConverge && minSim.months < 480 && (
+                  <div className={styles.card}>
+                    <h3 className={styles.cardTitle}>You Save</h3>
+                    <p className="big-number green">{minSim.months - payoff.months}mo</p>
+                    <span style={{ fontSize: 11, color: "var(--green)", fontFamily: "IBM Plex Mono, monospace" }}>${Math.round(minSim.total_interest - payoff.total_interest).toLocaleString()} interest</span>
+                  </div>
+                )}
+              </div>
             </div>
           )}
         </>
