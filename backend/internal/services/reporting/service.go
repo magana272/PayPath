@@ -189,7 +189,18 @@ func calcPaydays(incomes []income.Income, annualGross float64, year, month, days
 			} else if inc.PayPerHour != nil && inc.HourPerDay != nil {
 				amount = *inc.PayPerHour * *inc.HourPerDay
 			}
-			if amount == 0 || inc.PayDay == nil {
+			if amount == 0 {
+				continue
+			}
+			if inc.Date != nil {
+				parsed, err := time.Parse("2006-01-02", *inc.Date)
+				if err != nil || parsed.Year() != year || int(parsed.Month()) != month {
+					continue
+				}
+				events = append(events, payEvent{Day: parsed.Day(), Amount: utils.Round2(amount), Label: inc.Job, ID: inc.ID})
+				continue
+			}
+			if inc.PayDay == nil {
 				continue
 			}
 			day := *inc.PayDay

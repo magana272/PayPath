@@ -140,7 +140,7 @@ export default function IncomeTab({ jobs, onReload }) {
           <tr><th>Job</th><th>Type</th><th>Pay</th><th>Frequency</th><th></th></tr>
         </thead>
         <tbody>
-          {jobs.map((j) => (
+          {jobs.filter((j) => j.pay_frequency !== "one-time").map((j) => (
             <tr key={j.id}>
               <td>{j.job}</td>
               <td className={ss.tdMetaCaps}>{j.pay_type || "hourly"}</td>
