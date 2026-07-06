@@ -70,6 +70,7 @@ export default function Explore() {
   const [debts, setDebts] = useState(() => cache.get("debts") || []);
   const [liquid, setLiquid] = useState(() => cache.get("liquid") || []);
   const [expenses, setExpenses] = useState(() => cache.get("expenses") || []);
+  const [heatmap, setHeatmap] = useState(null);
   const [cashflow, setCashflow] = useState(() => cache.get("cashflow-90"));
   const [jobs, setJobs] = useState(() => cache.get("income"));
   const [extraPayment, setExtraPayment] = useState(0);
@@ -129,6 +130,18 @@ export default function Explore() {
       loaded.current.trends = true;
       api.getLiquid().then(setLiquid);
       api.getExpenses().then(setExpenses);
+      const hy = new Date().getFullYear();
+      Promise.all(Array.from({ length: 12 }, (_, i) => api.getCalendar(hy, i + 1))).then((months) => {
+        const m = {};
+        months.forEach((mon, idx) => {
+          const mm = String(idx + 1).padStart(2, "0");
+          Object.entries(mon.events || {}).forEach(([day, evts]) => {
+            const key = `${hy}-${mm}-${String(day).padStart(2, "0")}`;
+            m[key] = (m[key] || 0) + evts.reduce((s, e) => s + (e.type === "payday" ? e.amount : -e.amount), 0);
+          });
+        });
+        setHeatmap({ year: hy, map: m });
+      });
     }
   }, [tab]);
 
@@ -218,7 +231,7 @@ export default function Explore() {
       {visited.trends && (
         <TabPanel active={tab === "trends"}>
           <Suspense fallback={<LoadingFallback />}>
-            <TrendsTab debts={debts} summary={summary} liquid={liquid} expenses={expenses} />
+            <TrendsTab debts={debts} summary={summary} liquid={liquid} expenses={expenses} heatmap={heatmap} />
           </Suspense>
         </TabPanel>
       )}
