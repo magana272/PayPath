@@ -1,8 +1,9 @@
 package income
 
 type DateException struct {
-	OriginalDate string `json:"original_date" bson:"original_date"`
-	NewDate      string `json:"new_date" bson:"new_date"`
+	OriginalDate string   `json:"original_date" bson:"original_date"`
+	NewDate      string   `json:"new_date" bson:"new_date"`
+	Amount       *float64 `json:"amount,omitempty" bson:"amount,omitempty"`
 }
 
 type Income struct {

@@ -500,7 +500,9 @@ func BuildCalendar(year, month int, exps []expenses.Expense, incomes []income.In
 				totalSemiMonthly -= amount
 			}
 			if newDate.Year() == year && int(newDate.Month()) == month {
-				if amount == 0 {
+				if ex.Amount != nil {
+					amount = *ex.Amount
+				} else if amount == 0 {
 					amount = income.PayAmount(inc, annualGross)
 				}
 				addEvent(newDate.Day(), CalendarEvent{Type: "payday", Label: inc.Job, Amount: amount, ID: incID})
