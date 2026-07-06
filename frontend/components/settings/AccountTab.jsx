@@ -3,10 +3,12 @@
 import { useState } from "react";
 import { useAuth } from "@/components/AuthProvider";
 import Modal from "@/components/Modal";
+import { PROTECTED_EMAIL } from "@/lib/constants";
 import ss from "@/app/settings/page.module.css";
 
 export default function AccountTab() {
   const { user, deleteAccount } = useAuth();
+  const isProtected = user?.email === PROTECTED_EMAIL;
   const [showConfirm, setShowConfirm] = useState(false);
   const [confirmText, setConfirmText] = useState("");
   const [deleting, setDeleting] = useState(false);
@@ -39,9 +41,18 @@ export default function AccountTab() {
         <p className={ss.dangerText}>
           Permanently delete your account and all associated data. This action cannot be undone.
         </p>
-        <button className={ss.dangerBtn} onClick={() => setShowConfirm(true)}>
-          Delete Account
-        </button>
+        {isProtected ? (
+          <>
+            <button className={ss.dangerBtn} disabled>
+              Delete Account
+            </button>
+            <p className={ss.dangerText}>The demo account can&apos;t be deleted.</p>
+          </>
+        ) : (
+          <button className={ss.dangerBtn} onClick={() => setShowConfirm(true)}>
+            Delete Account
+          </button>
+        )}
       </div>
 
       <Modal isOpen={showConfirm} onClose={() => { setShowConfirm(false); setConfirmText(""); }} title="Delete Account">

@@ -82,6 +82,8 @@ func authStatus(err error) int {
 		errors.Is(err, auth.ErrTokenRevoked),
 		errors.Is(err, auth.ErrInvalidCredentials):
 		return 401
+	case errors.Is(err, auth.ErrProtectedAccount):
+		return 403
 	default:
 		return 500
 	}
