@@ -297,20 +297,13 @@ func ProjectCashflow(liqs []liquid.Liquid, incomes []income.Income, exps []expen
 	dailyExp := monthlyExp / 30.0
 	today := time.Now()
 	billMarkers := computeBillMarkers(exps, today, days)
+	paydayMarkers := computePaydayMarkers(incomes, annualGross, today, days)
 	result := make([]CashflowDay, 0, days)
 
 	for i := 0; i < days; i++ {
 		date := today.AddDate(0, 0, i)
 		dateStr := date.Format("2006-01-02")
-		day := date.Day()
-		yr := date.Year()
-		mo := int(date.Month())
-		dim := time.Date(yr, time.Month(mo), 1, 0, 0, 0, 0, time.UTC).AddDate(0, 1, -1).Day()
-		for _, p := range calcPaydays(incomes, annualGross, yr, mo, dim) {
-			if p.Day == day {
-				balance += p.Amount
-			}
-		}
+		balance += paydayMarkers[dateStr]
 		balance -= dailyExp
 		bills := billMarkers[dateStr]
 		if bills == nil {
@@ -321,6 +314,48 @@ func ProjectCashflow(liqs []liquid.Liquid, incomes []income.Income, exps []expen
 			Balance: utils.Round2(balance),
 			Bills:   bills,
 		})
+	}
+	return result
+}
+
+func computePaydayMarkers(incomes []income.Income, annualGross float64, start time.Time, days int) map[string]float64 {
+	result := make(map[string]float64)
+
+	type yearMonth struct{ y, m int }
+	var months []yearMonth
+	seen := make(map[yearMonth]bool)
+	for i := 0; i <= days; i++ {
+		d := start.AddDate(0, 0, i)
+		k := yearMonth{d.Year(), int(d.Month())}
+		if !seen[k] {
+			seen[k] = true
+			months = append(months, k)
+		}
+	}
+
+	for _, inc := range incomes {
+		base := make(map[string]float64)
+		single := []income.Income{inc}
+		for _, mm := range months {
+			dim := time.Date(mm.y, time.Month(mm.m), 1, 0, 0, 0, 0, time.UTC).AddDate(0, 1, -1).Day()
+			for _, p := range calcPaydays(single, annualGross, mm.y, mm.m, dim) {
+				dateStr := fmt.Sprintf("%04d-%02d-%02d", mm.y, mm.m, p.Day)
+				base[dateStr] += p.Amount
+			}
+		}
+		for _, ex := range inc.Exceptions {
+			amount, has := base[ex.OriginalDate]
+			delete(base, ex.OriginalDate)
+			if ex.Amount != nil {
+				amount = *ex.Amount
+			} else if !has {
+				amount = income.PayAmount(inc, annualGross)
+			}
+			base[ex.NewDate] += amount
+		}
+		for dateStr, amt := range base {
+			result[dateStr] += amt
+		}
 	}
 	return result
 }
