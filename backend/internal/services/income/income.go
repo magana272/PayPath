@@ -15,5 +15,6 @@ type Income struct {
 	AnnualSalary *float64        `json:"annual_salary" bson:"annual_salary,omitempty"`
 	PayFrequency *string         `json:"pay_frequency" bson:"pay_frequency,omitempty"`
 	PayDay       *int            `json:"pay_day" bson:"pay_day,omitempty"`
+	Date         *string         `json:"date" bson:"date,omitempty"`
 	Exceptions   []DateException `json:"exceptions" bson:"exceptions,omitempty"`
 }

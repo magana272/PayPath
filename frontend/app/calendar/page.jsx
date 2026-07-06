@@ -21,6 +21,8 @@ export default function Calendar() {
   const [dayMode, setDayMode] = useState("view");
   const [billForm, setBillForm] = useState({ expense: "", cost: "", frequency: "monthly" });
   const [addingBill, setAddingBill] = useState(false);
+  const [incomeForm, setIncomeForm] = useState({ label: "", amount: "" });
+  const [addingIncome, setAddingIncome] = useState(false);
   const [activeEvent, setActiveEvent] = useState(null);
   const [eventAction, setEventAction] = useState(null);
   const [editForm, setEditForm] = useState({});
@@ -67,6 +69,7 @@ export default function Calendar() {
     setSelectedDay(selectedDay === day ? null : day);
     setDayMode("view");
     setBillForm({ expense: "", cost: "", frequency: "monthly" });
+    setIncomeForm({ label: "", amount: "" });
   };
 
   const handleDayKeyDown = (e, day) => {
@@ -93,6 +96,28 @@ export default function Calendar() {
       emitRefresh();
     } finally {
       setAddingBill(false);
+    }
+  };
+
+  const handleAddIncome = async (e) => {
+    e.preventDefault();
+    setAddingIncome(true);
+    try {
+      const date = `${year}-${String(month).padStart(2, "0")}-${String(selectedDay).padStart(2, "0")}`;
+      await api.addIncome({
+        job: incomeForm.label,
+        pay_type: "salary",
+        annual_salary: parseFloat(incomeForm.amount),
+        pay_frequency: "one-time",
+        date,
+      });
+      setIncomeForm({ label: "", amount: "" });
+      setSelectedDay(null);
+      setDayMode("view");
+      loadCalendar();
+      emitRefresh();
+    } finally {
+      setAddingIncome(false);
     }
   };
 
@@ -212,6 +237,25 @@ export default function Calendar() {
     }
   };
 
+  const handleDeleteEvent = async () => {
+    const source = findSourceItem(activeEvent.ev);
+    if (!source?.item) return;
+    setSaving(true);
+    try {
+      if (source.type === "income") {
+        await api.deleteIncome(source.item.id);
+      } else {
+        await api.deleteExpense(source.item.id);
+      }
+      setActiveEvent(null);
+      setEventAction(null);
+      loadCalendar();
+      emitRefresh();
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const closeEventModal = () => {
     setActiveEvent(null);
     setEventAction(null);
@@ -239,6 +283,10 @@ export default function Calendar() {
           handleDayClick={handleDayClick}
           handleDayKeyDown={handleDayKeyDown}
           handleAddBill={handleAddBill}
+          incomeForm={incomeForm}
+          setIncomeForm={setIncomeForm}
+          addingIncome={addingIncome}
+          handleAddIncome={handleAddIncome}
           setSelectedDay={setSelectedDay}
           onEventClick={handleEventClick}
           activeEvent={activeEvent}
@@ -252,6 +300,7 @@ export default function Calendar() {
           openMove={openMove}
           handleEditSave={handleEditSave}
           handleMoveSave={handleMoveSave}
+          handleDeleteEvent={handleDeleteEvent}
           closeEventModal={closeEventModal}
           findSourceItem={findSourceItem}
         />
@@ -264,9 +313,10 @@ export default function Calendar() {
 
 function CalendarContent({
   data, year, month, selectedDay, dayMode, billForm, addingBill, setBillForm, setDayMode,
-  prevMonth, nextMonth, handleDayClick, handleDayKeyDown, handleAddBill, setSelectedDay,
+  prevMonth, nextMonth, handleDayClick, handleDayKeyDown, handleAddBill,
+  incomeForm, setIncomeForm, addingIncome, handleAddIncome, setSelectedDay,
   onEventClick, activeEvent, eventAction, editForm, setEditForm, moveDate, setMoveDate,
-  saving, openEdit, openMove, handleEditSave, handleMoveSave, closeEventModal, findSourceItem,
+  saving, openEdit, openMove, handleEditSave, handleMoveSave, handleDeleteEvent, closeEventModal, findSourceItem,
 }) {
   const blanks = data.first_weekday;
   const cells = [];
@@ -394,6 +444,12 @@ function CalendarContent({
                 >
                   + Add Bill
                 </button>
+                <button
+                  onClick={() => setDayMode("income")}
+                  className={dayMode === "income" ? cal.modeToggleActive : cal.modeToggle}
+                >
+                  + Add Income
+                </button>
               </div>
 
               {dayMode === "add" && (
@@ -410,6 +466,18 @@ function CalendarContent({
                   </div>
                   <button type="submit" className={modalStyles.submit} disabled={addingBill}>
                     {addingBill ? "Saving..." : "Add Bill"}
+                  </button>
+                </form>
+              )}
+
+              {dayMode === "income" && (
+                <form className={modalStyles.form} onSubmit={handleAddIncome}>
+                  <input placeholder="Income label" value={incomeForm.label} onChange={(e) => setIncomeForm({ ...incomeForm, label: e.target.value })} required />
+                  <div className={modalStyles.formRow}>
+                    <input type="number" step="0.01" placeholder="Amount" value={incomeForm.amount} onChange={(e) => setIncomeForm({ ...incomeForm, amount: e.target.value })} required />
+                  </div>
+                  <button type="submit" className={modalStyles.submit} disabled={addingIncome}>
+                    {addingIncome ? "Saving..." : "Add Income"}
                   </button>
                 </form>
               )}
@@ -438,6 +506,9 @@ function CalendarContent({
               </button>
               <button className={modalStyles.btnSecondary} onClick={openMove} disabled={!activeSource?.item}>
                 Move
+              </button>
+              <button className={modalStyles.btnSecondary} onClick={handleDeleteEvent} disabled={!activeSource?.item || saving}>
+                {saving ? "Deleting..." : "Delete"}
               </button>
             </div>
           </div>
@@ -485,6 +556,7 @@ function CalendarContent({
                 <option value="biweekly">Biweekly</option>
                 <option value="semi-monthly">Semi-Monthly</option>
                 <option value="monthly">Monthly</option>
+                <option value="one-time">One-time</option>
               </select>
               {(editForm.pay_frequency === "biweekly" || editForm.pay_frequency === "monthly") && (
                 <input type="number" min="1" max="31" placeholder="Pay day" value={editForm.pay_day || ""} onChange={(e) => setEditForm({ ...editForm, pay_day: e.target.value })} />
