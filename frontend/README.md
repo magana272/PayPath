@@ -43,13 +43,15 @@ Requires Node 24 (`.nvmrc` at the repo root, and the Makefile runs `nvm use 24`)
 ## Docker
 
 ```bash
-docker compose up --build   # production build served on :3000
+docker compose up --build frontend   # production build on :3000, works from anywhere in the repo
 ```
+
+The container is defined in the compose file at the repo root — the only one in the repo; compose finds it from any subdirectory by walking up. Starting `frontend` also starts the API it depends on.
 
 `NEXT_PUBLIC_API_URL` is baked into the client bundle at **build** time, so in Docker it's a build arg, not a runtime env var — changing it means rebuilding the image:
 
 ```bash
-NEXT_PUBLIC_API_URL=https://api.example.com/api docker compose up --build
+NEXT_PUBLIC_API_URL=https://api.example.com/api docker compose up --build frontend
 # or building directly:
 docker build --build-arg NEXT_PUBLIC_API_URL=https://api.example.com/api -t paypath-frontend .
 ```

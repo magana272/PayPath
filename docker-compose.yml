@@ -1,16 +1,41 @@
 services:
+  mongo:
+    profiles: ["${MONGODB_URI:+remote}"]
+    image: mongo:8
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: secret_password
+    volumes:
+      - mongo_data:/data/db
+    ports:
+      - "27017:27017"
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.runCommand({ping:1})"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
   backend:
     build: ./backend
     ports:
       - "8000:8000"
-    env_file: ./backend/.env
+    env_file: .env
+    environment:
+      MONGODB_URI: ${MONGODB_URI:-mongodb://admin:secret_password@mongo:27017}
+    depends_on:
+      mongo:
+        condition: service_healthy
+        required: false
 
   frontend:
     build:
       context: ./frontend
       args:
-        NEXT_PUBLIC_API_URL: http://localhost:8000/api
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000/api}
     ports:
       - "3000:3000"
     depends_on:
       - backend
+
+volumes:
+  mongo_data:

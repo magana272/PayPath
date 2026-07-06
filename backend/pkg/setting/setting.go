@@ -25,8 +25,9 @@ type Config struct {
 }
 
 func init() {
-	loadDotEnv(".env")
 	loadDotEnv("../../.env")
+	loadDotEnv("../.env")
+	loadDotEnv(".env")
 }
 
 func loadDotEnv(path string) {
@@ -46,6 +47,9 @@ func loadDotEnv(path string) {
 			continue
 		}
 		k = strings.TrimSpace(k)
+		if os.Getenv(k) != "" {
+			continue
+		}
 		v = strings.TrimSpace(v)
 		v = strings.Trim(v, `"'`)
 		os.Setenv(k, v)

@@ -39,8 +39,7 @@ paypath-go/
 │           ├── strategies.go        # AI strategies: debt, savings, expense, income
 │           └── bundle.go            # aggregated responses for frontend pages
 ├── seed/                            # CSV seed data
-├── Makefile
-└── .env
+└── Makefile
 ```
 
 ## API Endpoints
@@ -137,7 +136,7 @@ FRONTEND_URL=http://localhost:3000
 
 ## Makefile
 
-```
+```text
 make build     # compile binary
 make run       # build and start server
 make run-dev   # build and start with request logging
@@ -150,12 +149,12 @@ make reset     # kill + clean
 ## Docker
 
 ```bash
-docker compose up --build   # from backend/: API on :8000
+docker compose up --build backend   # API on :8000, works from anywhere in the repo
 ```
 
-The compose file loads the API container's environment from `.env` in this directory (`cp .env.example .env` first — compose errors if it's missing). Every variable in the file is forwarded, including the optional `STRIPE_*` keys. `MONGODB_URI` must point at a reachable MongoDB (e.g. an Atlas URI); inside a container `localhost` is the container itself, so a Mongo running on the host is reached via `host.docker.internal` instead.
+The API runs from the compose file at the repo root — the only one in the repo; compose finds it from any subdirectory by walking up. It loads the container's environment from the root `.env` (`cp .env.example .env` there first — compose errors if it's missing), forwarding every variable including the optional `STRIPE_*` keys. Leave `MONGODB_URI` blank and a bundled Mongo container starts alongside the API; set it (e.g. an Atlas URI) and the bundled Mongo is skipped. For a Mongo running on the host use `host.docker.internal` — `localhost` inside a container is the container itself.
 
-Don't run this and the root-level stack at the same time — both publish :8000.
+`.env.example` in this directory lists the variables to set in your platform's dashboard when deploying the backend on its own.
 
 To build just the image: `docker build -t paypath-backend .` — multi-stage build producing a static binary plus the `seed/` CSVs (read on first boot). The container listens on :8000 and honors `PORT`.
 

@@ -12,32 +12,53 @@ docs/       design notes
 
 ## Quick start
 
-### Docker (whole stack)
+All local config lives in one `.env` at the repo root:
 
 ```bash
-cp backend/.env.example backend/.env   # backend config — see variables below
+cp .env.example .env 
 docker compose up --build
 ```
 
-The backend container reads its config from `backend/.env` — point `MONGODB_URI` at your MongoDB (e.g. an Atlas URI). A `localhost` URI won't work from inside a container; use `host.docker.internal` to reach a Mongo running on the host.
+`MONGODB_URI` is the mode switch: leave it blank to use a bundled MongoDB container (docker compose starts it automatically), or set it to your own database (e.g. an Atlas URI) and the Mongo container is skipped.
 
-### Docker (fully local: backend + frontend + Mongo)
+### Docker (whole stack)
 
 ```bash
-docker compose -f docker-compose.yml -f docker-compose.local.yml up --build
+docker compose up --build
 ```
 
-Adds a bundled MongoDB container and points the backend at it, overriding `MONGODB_URI` from `backend/.env` (everything else in the file still applies). Data persists in the `mongo_data` volume, and Mongo is published on `localhost:27017` for mongosh/Compass (`mongodb://admin:secret_password@localhost:27017`).
+When the bundled Mongo runs, its data persists in the `mongo_data` volume and it's published on `localhost:27017` for mongosh/Compass (`mongodb://admin:secret_password@localhost:27017`). If you point `MONGODB_URI` at a Mongo running on the host, use `host.docker.internal` — `localhost` inside a container is the container itself.
+
+### Docker (one service)
+
+```bash
+docker compose up --build backend   
+docker compose up --build frontend  
+docker compose up -d mongo 
+```
+
+### Make shortcuts
+
+| Target | What it does |
+|--------|--------------|
+| `make up` / `make down` | Whole stack up / down |
+| `make backend` | API (+ bundled Mongo when needed) |
+| `make frontend` | Web app container |
+| `make mongo` | Just the database, detached |
+| `make dev-backend` | Bare-metal API: `cd backend && make run` |
+| `make dev-frontend` | `cd frontend && make dev` |
+| `make test` | `cd backend && make test` |
 
 ### 1. Backend (Go 1.22+)
 
 ```bash
 cd backend
-cp .env.example .env   # or create .env — see variables below
-make run               # builds and serves the API on :8000
+make run 
 ```
 
-Environment (read from `.env` or the shell):
+Reads `.env` from the repo root. Bare-metal runs need `MONGODB_URI` set — either your own URI, or start just the bundled database with `docker compose up -d mongo` and use `mongodb://admin:secret_password@localhost:27017`.
+
+Environment (read from the root `.env` or the shell):
 
 | Variable | Purpose |
 |----------|---------|

@@ -12,7 +12,7 @@ run-dev: build
 # Run all tests. The Mongo-backed repository tests under ./tests skip
 # automatically unless MONGODB_URI is set.
 test:
-	go test ./...
+	go test -v -count=1 ./tests/
 
 # Format, vet, and test in one shot.
 check: fmt vet test
