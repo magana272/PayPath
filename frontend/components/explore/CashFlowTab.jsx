@@ -81,29 +81,29 @@ export default function CashFlowTab({ cashflow }) {
     <>
       <div className={styles.grid}>
         <div className={styles.card}>
-          <h3 className={styles.cardTitle}>Starting Balance</h3>
+          <h2 className={styles.cardTitle}>Starting Balance</h2>
           <p className="big-number">${cashflow[0].balance.toLocaleString()}</p>
         </div>
         <div className={styles.card}>
-          <h3 className={styles.cardTitle}>Ending Balance</h3>
+          <h2 className={styles.cardTitle}>Ending Balance</h2>
           <p className="big-number">${cashflow[cashflow.length - 1].balance.toLocaleString()}</p>
         </div>
         <div className={`${styles.card}${cfMin < 0 ? ` ${styles.danger}` : ""}`}>
-          <h3 className={styles.cardTitle}>Lowest Point</h3>
+          <h2 className={styles.cardTitle}>Lowest Point</h2>
           <p className={`big-number ${cfMin < 0 ? "red" : ""}`}>${cfMin.toLocaleString()}</p>
         </div>
         <div className={styles.card}>
-          <h3 className={styles.cardTitle}>Highest Point</h3>
+          <h2 className={styles.cardTitle}>Highest Point</h2>
           <p className="big-number">${cfMax.toLocaleString()}</p>
         </div>
         <div className={styles.card}>
-          <h3 className={styles.cardTitle}>Net Change</h3>
+          <h2 className={styles.cardTitle}>Net Change</h2>
           <p className={`big-number ${cfChange < 0 ? "red" : ""}`}>
             {cfChange >= 0 ? "+" : ""}${cfChange.toLocaleString()}
           </p>
         </div>
         <div className={styles.card}>
-          <h3 className={styles.cardTitle}>Avg Daily</h3>
+          <h2 className={styles.cardTitle}>Avg Daily</h2>
           <p className={`big-number ${cfAvgDaily < 0 ? "red" : ""}`}>
             {cfAvgDaily >= 0 ? "+" : ""}${cfAvgDaily.toFixed(2)}
           </p>
@@ -114,13 +114,13 @@ export default function CashFlowTab({ cashflow }) {
         <div className={styles.grid}>
           {daysNegative > 0 && (
             <div className={`${styles.card} ${styles.danger}`}>
-              <h3 className={styles.cardTitle}>Days Negative</h3>
+              <h2 className={styles.cardTitle}>Days Negative</h2>
               <p className="big-number">{daysNegative} of {cashflow.length}</p>
             </div>
           )}
           {daysBelow1k > 0 && (
             <div className={`${styles.card} ${styles.danger}`}>
-              <h3 className={styles.cardTitle}>Days Below $1k</h3>
+              <h2 className={styles.cardTitle}>Days Below $1k</h2>
               <p className="big-number">{daysBelow1k} of {cashflow.length}</p>
             </div>
           )}

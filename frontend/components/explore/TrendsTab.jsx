@@ -70,7 +70,7 @@ export default function TrendsTab({ debts, summary, liquid, expenses, heatmap, p
         <div className={cg.card} style={{ display: "flex", alignItems: "center", gap: 16 }}>
           <RadialProgress value={monthsCovered} max={6} color={efColor} size={72} />
           <div>
-            <h3 className={cg.cardTitle}>Emergency Fund</h3>
+            <h2 className={cg.cardTitle}>Emergency Fund</h2>
             <p className="big-number">{monthsCovered.toFixed(1)} mo</p>
             <span style={{ fontSize: 10, color: "var(--text-muted)", fontFamily: "var(--font-mono), monospace" }}>of expenses covered · target 3–6</span>
           </div>

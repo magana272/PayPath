@@ -82,7 +82,7 @@ export default function DebtPayoffTab({ payoff: initialPayoff, scenarios, debts,
       {payoff && (
         <div className={styles.grid}>
           <div className={`${styles.card}${negativeBudget ? ` ${styles.danger}` : ""}`}>
-            <h3 className={styles.cardTitle}>Monthly Budget</h3>
+            <h2 className={styles.cardTitle}>Monthly Budget</h2>
             <p className="big-number">
               {negativeBudget ? "−" : ""}${Math.abs(payoff.budget).toLocaleString()}
               {extraPayment > 0 && (
@@ -92,7 +92,7 @@ export default function DebtPayoffTab({ payoff: initialPayoff, scenarios, debts,
           </div>
           {hasHistory && didConverge ? (
             <div className={`${styles.card} ${styles.accent}`}>
-              <h3 className={styles.cardTitle}>Debt-Free In</h3>
+              <h2 className={styles.cardTitle}>Debt-Free In</h2>
               <p className="big-number">
                 {Math.floor(payoff.months / 12)}y {payoff.months % 12}m
                 {savedMonths > 0 && (
@@ -104,19 +104,19 @@ export default function DebtPayoffTab({ payoff: initialPayoff, scenarios, debts,
             </div>
           ) : (
             <div className={`${styles.card} ${styles.danger}`}>
-              <h3 className={styles.cardTitle}>Debt-Free In</h3>
+              <h2 className={styles.cardTitle}>Debt-Free In</h2>
               <p className="big-number">40y+</p>
             </div>
           )}
           {totalMinPayments > 0 && (
             <div className={styles.card}>
-              <h3 className={styles.cardTitle}>Min Payments</h3>
+              <h2 className={styles.cardTitle}>Min Payments</h2>
               <p className="big-number">${Math.round(totalMinPayments).toLocaleString()}/mo</p>
             </div>
           )}
           {didConverge && payoff.total_interest > 0 && (
             <div className={`${styles.card} ${styles.danger}`}>
-              <h3 className={styles.cardTitle}>Total Interest</h3>
+              <h2 className={styles.cardTitle}>Total Interest</h2>
               <p className="big-number">${payoff.total_interest.toLocaleString()}</p>
             </div>
           )}
@@ -150,6 +150,7 @@ export default function DebtPayoffTab({ payoff: initialPayoff, scenarios, debts,
               value={extraPayment}
               onChange={(e) => onExtraPaymentChange(Number(e.target.value))}
               className={es.sliderInput}
+              aria-label="Extra monthly payment"
             />
             <span className={es.sliderLabel} style={{ color: extraPayment > 0 ? "var(--green)" : "var(--text-muted)" }}>
               +${extraPayment.toLocaleString()}
@@ -229,18 +230,18 @@ export default function DebtPayoffTab({ payoff: initialPayoff, scenarios, debts,
               <h2 className={es.chartTitle}>Minimums vs. Your Plan</h2>
               <div className={styles.grid}>
                 <div className={`${styles.card} ${styles.danger}`}>
-                  <h3 className={styles.cardTitle}>Paying Minimums Only</h3>
+                  <h2 className={styles.cardTitle}>Paying Minimums Only</h2>
                   <p className="big-number">{minSim.months < 480 ? `${Math.floor(minSim.months / 12)}y ${minSim.months % 12}m` : "40y+"}</p>
                   <span style={{ fontSize: 11, color: "var(--text-muted)", fontFamily: "var(--font-mono), monospace" }}>${Math.round(minSim.total_interest).toLocaleString()} interest</span>
                 </div>
                 <div className={`${styles.card} ${styles.accent}`}>
-                  <h3 className={styles.cardTitle}>Your Plan</h3>
+                  <h2 className={styles.cardTitle}>Your Plan</h2>
                   <p className="big-number">{didConverge ? `${Math.floor(payoff.months / 12)}y ${payoff.months % 12}m` : "40y+"}</p>
                   <span style={{ fontSize: 11, color: "var(--text-muted)", fontFamily: "var(--font-mono), monospace" }}>${Math.round(payoff.total_interest).toLocaleString()} interest</span>
                 </div>
                 {didConverge && minSim.months < 480 && (
                   <div className={styles.card}>
-                    <h3 className={styles.cardTitle}>You Save</h3>
+                    <h2 className={styles.cardTitle}>You Save</h2>
                     <p className="big-number green">{minSim.months - payoff.months}mo</p>
                     <span style={{ fontSize: 11, color: "var(--green)", fontFamily: "var(--font-mono), monospace" }}>${Math.round(minSim.total_interest - payoff.total_interest).toLocaleString()} interest</span>
                   </div>

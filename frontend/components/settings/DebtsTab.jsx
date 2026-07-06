@@ -77,11 +77,11 @@ export default function DebtsTab({ debts, onReload }) {
 
       <div className={cs.grid}>
         <div className={cs.card}>
-          <h3 className={cs.cardTitle}>Total Owed</h3>
+          <h2 className={cs.cardTitle}>Total Owed</h2>
           <p className="big-number red">${totalDebt.toLocaleString()}</p>
         </div>
         <div className={cs.card}>
-          <h3 className={cs.cardTitle}>Accounts</h3>
+          <h2 className={cs.cardTitle}>Accounts</h2>
           <p className="big-number">{debts.length}</p>
         </div>
       </div>

@@ -381,15 +381,15 @@ function CalendarContent({
     <>
       <div className={cs.grid}>
         <div className={cs.card}>
-          <h3 className={cs.cardTitle}>Income This Month</h3>
+          <h2 className={cs.cardTitle}>Income This Month</h2>
           <p className="big-number green">${totalIncome.toLocaleString()}</p>
         </div>
         <div className={cs.card}>
-          <h3 className={cs.cardTitle}>Bills Due This Month</h3>
+          <h2 className={cs.cardTitle}>Bills Due This Month</h2>
           <p className="big-number red">${totalBills.toFixed(2)}</p>
         </div>
         <div className={`${cs.card} ${cs.accent}`}>
-          <h3 className={cs.cardTitle}>Net After Bills</h3>
+          <h2 className={cs.cardTitle}>Net After Bills</h2>
           <p className={`big-number ${totalIncome - totalBills < 0 ? "red" : ""}`}>
             ${(totalIncome - totalBills).toFixed(2)}
           </p>
