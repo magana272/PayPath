@@ -9,8 +9,8 @@ import styles from "./setup.module.css";
 const STEPS = [
   { id: "income", label: "Income" },
   { id: "expenses", label: "Expenses" },
-  { id: "debts", label: "Debts" },
-  { id: "liquid", label: "Accounts" },
+  { id: "debts", label: "Debts", optional: true },
+  { id: "liquid", label: "Accounts", optional: true },
 ];
 
 export default function SetupPage() {
@@ -26,8 +26,6 @@ export default function SetupPage() {
   const [debts, setDebts] = useState([]);
   const [debtForm, setDebtForm] = useState({ bank: "", type: "credit_card", name: "", apy: "", balance: "" });
 
-  const [liquid, setLiquid] = useState([]);
-  const [liquidLoaded, setLiquidLoaded] = useState(false);
   const [liquidForm, setLiquidForm] = useState({ bank: "", balance: "" });
   const [newLiquid, setNewLiquid] = useState([]);
 
@@ -35,14 +33,6 @@ export default function SetupPage() {
     e.preventDefault();
     setNewLiquid([...newLiquid, { ...liquidForm, _id: Date.now() }]);
     setLiquidForm({ bank: "", balance: "" });
-  };
-
-  const loadLiquid = () => {
-    if (liquidLoaded) return;
-    api.getLiquid().then((accounts) => {
-      setLiquid(accounts.map((a) => ({ ...a, editBalance: String(a.balance) })));
-      setLiquidLoaded(true);
-    });
   };
 
   const [saving, setSaving] = useState(false);
@@ -79,9 +69,6 @@ export default function SetupPage() {
       ...debts.map((d) => () =>
         api.addDebt({ bank: d.bank, type: d.type, name: d.name, apy: parseFloat(d.apy), balance: parseFloat(d.balance) })
       ),
-      ...liquid.map((a) => () =>
-        api.updateLiquid(a.id, { bank: a.bank, balance: parseFloat(a.editBalance) })
-      ),
       ...newLiquid.map((a) => () =>
         api.addLiquid({ bank: a.bank, balance: parseFloat(a.balance) })
       ),
@@ -105,12 +92,13 @@ export default function SetupPage() {
   };
 
   const next = () => {
-    if (step === 2) loadLiquid();
     if (step < STEPS.length - 1) setStep((s) => s + 1);
     else finish();
   };
 
   const prev = () => setStep((s) => Math.max(0, s - 1));
+
+  const canFinishEarly = STEPS[step].optional;
 
   return (
     <div className={styles.container}>
@@ -195,6 +183,7 @@ export default function SetupPage() {
             <>
               <h2 className={styles.stepTitle}>Add Debts</h2>
               <p className={styles.stepDesc}>Credit cards, loans, etc.</p>
+              <p className={styles.stepDesc}>Optional — you can skip this.</p>
               <form className={styles.form} onSubmit={addDebt}>
                 <div className={styles.row}>
                   <input className={styles.input} placeholder="Bank" value={debtForm.bank} onChange={(e) => setDebtForm({ ...debtForm, bank: e.target.value })} required />
@@ -227,7 +216,8 @@ export default function SetupPage() {
           {step === 3 && (
             <>
               <h2 className={styles.stepTitle}>Liquid Accounts</h2>
-              <p className={styles.stepDesc}>Set balances or add new accounts.</p>
+              <p className={styles.stepDesc}>Checking, savings, cash, etc.</p>
+              <p className={styles.stepDesc}>Optional — you can skip this.</p>
               <form className={styles.form} onSubmit={addLiquidAccount}>
                 <div className={styles.row}>
                   <input className={styles.input} placeholder="Bank name" value={liquidForm.bank} onChange={(e) => setLiquidForm({ ...liquidForm, bank: e.target.value })} required />
@@ -235,33 +225,12 @@ export default function SetupPage() {
                 </div>
                 <button type="submit" className={styles.addBtn}>+ Add</button>
               </form>
-              {!liquidLoaded ? (
-                <p style={{ color: "var(--text-muted)", fontFamily: "IBM Plex Mono, monospace", fontSize: 11 }}>Loading existing accounts...</p>
-              ) : (
+              {newLiquid.length > 0 && (
                 <ul className={styles.list}>
-                  {liquid.map((a) => (
-                    <li key={a.id} className={styles.listItem}>
-                      <span style={{ fontFamily: "IBM Plex Mono, monospace", fontSize: 12 }}>{a.bank}</span>
-                      <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                        <span style={{ fontFamily: "IBM Plex Mono, monospace", fontSize: 11, color: "var(--text-muted)" }}>$</span>
-                        <input
-                          className={styles.input}
-                          type="number"
-                          step="0.01"
-                          style={{ width: 100, textAlign: "right" }}
-                          value={a.editBalance}
-                          onChange={(e) => setLiquid(liquid.map((x) => x.id === a.id ? { ...x, editBalance: e.target.value } : x))}
-                        />
-                      </div>
-                    </li>
-                  ))}
                   {newLiquid.map((a) => (
                     <li key={a._id} className={styles.listItem}>
-                      <span style={{ fontFamily: "IBM Plex Mono, monospace", fontSize: 12 }}>{a.bank} <span style={{ color: "var(--text-muted)", fontSize: 10 }}>(new)</span></span>
-                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                        <span style={{ fontFamily: "IBM Plex Mono, monospace", fontSize: 12 }}>${a.balance}</span>
-                        <button className={styles.removeBtn} onClick={() => setNewLiquid(newLiquid.filter((x) => x._id !== a._id))}>✕</button>
-                      </div>
+                      <span>{a.bank} — ${a.balance}</span>
+                      <button className={styles.removeBtn} onClick={() => setNewLiquid(newLiquid.filter((x) => x._id !== a._id))}>✕</button>
                     </li>
                   ))}
                 </ul>
@@ -276,7 +245,12 @@ export default function SetupPage() {
         {/* Navigation */}
         <div className={styles.nav}>
           <button className={styles.navBack} onClick={prev} disabled={step === 0}>← Back</button>
-          <button className={styles.navSkip} onClick={() => router.push("/")}>Skip</button>
+          <button className={styles.navSkip} onClick={() => router.push("/")}>Skip for now</button>
+          {canFinishEarly && step < STEPS.length - 1 && (
+            <button className={styles.navBack} onClick={finish} disabled={saving}>
+              {saving ? "Saving..." : "Finish"}
+            </button>
+          )}
           <button className={styles.navNext} onClick={next} disabled={saving}>
             {step < STEPS.length - 1 ? "Next →" : (saving ? "Saving..." : "Complete")}
           </button>
