@@ -55,13 +55,23 @@ func loadDotEnv(path string) {
 func Load() Config {
 	return Config{
 		Environment:       getEnv("ENV", defaultEnv),
-		HTTPAddr:          getEnv("HTTP_ADDR", defaultHTTPAddr),
+		HTTPAddr:          httpAddr(),
 		JWTSecret:         getEnv("JWT_SECRET", "paypath-dev-secret"),
 		MongoURI:          getEnv("MONGODB_URI", ""),
 		FrontendURL:       getEnv("FRONTEND_URL", "http://localhost:5173"),
 		ShutdownTimeout:   getDurationEnv("SHUTDOWN_TIMEOUT", defaultShutdownTimeout),
 		ReadHeaderTimeout: getDurationEnv("READ_HEADER_TIMEOUT", defaultReadHeaderTimeout),
 	}
+}
+
+func httpAddr() string {
+	if v := os.Getenv("HTTP_ADDR"); v != "" {
+		return v
+	}
+	if p := os.Getenv("PORT"); p != "" {
+		return ":" + p
+	}
+	return defaultHTTPAddr
 }
 
 func getEnv(key, fallback string) string {
