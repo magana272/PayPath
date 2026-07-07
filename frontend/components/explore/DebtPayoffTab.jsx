@@ -74,7 +74,7 @@ export default function DebtPayoffTab({ payoff: initialPayoff, scenarios, debts,
 
   const stickyTop = { top: stickyOffset };
 
-  const [balanceExpanded, setBalanceExpanded] = useState(false);
+  const [balanceExpanded, setBalanceExpanded] = useState(true);
   const [totalDebtExpanded, setTotalDebtExpanded] = useState(true);
 
   return (
