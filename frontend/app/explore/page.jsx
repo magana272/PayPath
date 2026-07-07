@@ -179,11 +179,12 @@ export default function Explore() {
     const regular = Math.min(j.hour_per_day, 8);
     const ot = Math.max(j.hour_per_day - 8, 0);
     const dailyGross = regular * j.pay_per_hour + ot * j.pay_per_hour * 1.5;
+    const days = j.days_per_week || 4;
     return {
       name: j.job,
       daily: Math.round(dailyGross),
-      weekly: Math.round(dailyGross * 4),
-      monthly: Math.round((dailyGross * 4 * 52) / 12),
+      weekly: Math.round(dailyGross * days),
+      monthly: Math.round((dailyGross * days * 52) / 12),
     };
   }), [jobs]);
 

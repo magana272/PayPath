@@ -11,7 +11,7 @@ export default function PayBreakdownTab({ summary, jobs, payBreakdown }) {
   const totalWeeklyGross = payBreakdown.reduce((s, j) => s + j.weekly, 0);
   const hourlyEffective = summary.taxes.annual_net / (52 * payBreakdown.reduce((s, j) => {
     const job = jobs.find((jj) => jj.job === j.name);
-    return s + (job ? job.hour_per_day * 4 : 0);
+    return s + (job ? job.hour_per_day * (job.days_per_week || 4) : 0);
   }, 0) || 1);
   const savingsRate = summary.monthly_surplus / summary.taxes.monthly_net * 100;
 
