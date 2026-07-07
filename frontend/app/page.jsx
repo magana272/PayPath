@@ -5,6 +5,7 @@ import Link from "next/link";
 import { IconSettings } from "@/components/Icons";
 import { api } from "@/lib/api";
 import { cache } from "@/lib/cache";
+import PaydayHero from "@/components/dashboard/PaydayHero";
 import SummaryCards from "@/components/dashboard/SummaryCards";
 import LiquidSection from "@/components/dashboard/LiquidSection";
 import ExpensesSection from "@/components/dashboard/ExpensesSection";
@@ -67,7 +68,10 @@ export default function Dashboard() {
       ) : null}
 
       {loaded.summary ? (
-        <SummaryCards summary={summary} />
+        <>
+          <PaydayHero summary={summary} />
+          <SummaryCards summary={summary} />
+        </>
       ) : (
         <SummaryCardsSkeleton />
       )}
