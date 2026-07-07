@@ -83,6 +83,7 @@ func New(d Deps) http.Handler {
 	protected.HandleFunc("GET /api/ai/savings-plan", strat.SavingsPlan)
 	protected.HandleFunc("GET /api/ai/expense-audit", strat.ExpenseAudit)
 	protected.HandleFunc("GET /api/ai/income-boost", strat.IncomeBoost)
+	protected.HandleFunc("GET /api/ai/status", strat.Status)
 
 	bundle := handler.NewBundleHandler(d.Dashboard, d.Explore, d.Settings)
 	protected.HandleFunc("GET /api/bundle/dashboard", bundle.Dashboard)
@@ -91,5 +92,5 @@ func New(d Deps) http.Handler {
 
 	mux.Handle("/api/", middleware.RequireAuth(d.Auth, protected))
 
-	return middleware.RequestLogger(middleware.CORS(mux, d.FrontendURL))
+	return middleware.Recover(middleware.RequestLogger(middleware.CORS(mux, d.FrontendURL)))
 }

@@ -2,6 +2,7 @@ package strategies
 
 import (
 	"context"
+	_ "embed"
 	"encoding/json"
 	"fmt"
 
@@ -12,6 +13,9 @@ import (
 	"paypath/internal/services/income"
 	"paypath/internal/services/reporting"
 )
+
+//go:embed system_prompt.txt
+var systemPrompt string
 
 type Response struct {
 	Summary string `json:"summary"`
@@ -45,7 +49,7 @@ func (s *Service) cached(uid int, topic string) (Response, bool) {
 }
 
 func (s *Service) callAI(ctx context.Context, uid int, topic, prompt string) (Response, error) {
-	raw, err := clients.Chat(ctx, prompt)
+	raw, err := clients.Chat(ctx, systemPrompt, prompt)
 	if err != nil {
 		return Response{}, err
 	}
