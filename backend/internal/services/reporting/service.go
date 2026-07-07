@@ -30,7 +30,9 @@ func (s *Service) Summary(uid int) (Summary, error) {
 	if err != nil {
 		return Summary{}, err
 	}
-	return BuildSummary(incomes, exps, dbts, liqs), nil
+	summary := BuildSummary(incomes, exps, dbts, liqs)
+	summary.NextPayday = CalcNextPayday(incomes, exps, income.CalcAnnualGross(incomes), time.Now())
+	return summary, nil
 }
 
 func (s *Service) Payoff(uid int, extra float64) (debts.PayoffResult, error) {
@@ -322,6 +324,35 @@ func anchorDays(anchor time.Time, step, year, month int) []int {
 		days = append(days, d.Day())
 	}
 	return days
+}
+
+func CalcNextPayday(incomes []income.Income, exps []expenses.Expense, annualGross float64, from time.Time) *NextPayday {
+	if len(incomes) == 0 {
+		return nil
+	}
+	markers := computePaydayMarkers(incomes, annualGross, from, 62)
+	for i := 0; i <= 62; i++ {
+		dateStr := from.AddDate(0, 0, i).Format("2006-01-02")
+		amt := markers[dateStr]
+		if amt <= 0 {
+			continue
+		}
+		label := ""
+		for _, inc := range incomes {
+			if computePaydayMarkers([]income.Income{inc}, annualGross, from, 62)[dateStr] > 0 {
+				label = inc.Job
+				break
+			}
+		}
+		billsDue := 0.0
+		for _, bills := range computeBillMarkers(exps, from, i) {
+			for _, b := range bills {
+				billsDue += b.Amount
+			}
+		}
+		return &NextPayday{Date: dateStr, DaysUntil: i, Amount: utils.Round2(amt), Label: label, BillsDue: utils.Round2(billsDue)}
+	}
+	return nil
 }
 
 func ProjectCashflow(liqs []liquid.Liquid, incomes []income.Income, exps []expenses.Expense, annualGross, monthlyExp float64, days int) []CashflowDay {

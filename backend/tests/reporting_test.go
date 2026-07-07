@@ -2,6 +2,7 @@ package tests
 
 import (
 	"testing"
+	"time"
 
 	"paypath/internal/liquid"
 	"paypath/internal/services/debts"
@@ -154,6 +155,69 @@ func TestBuildCalendarDueDateClamp(t *testing.T) {
 	cal := reporting.BuildCalendar(2025, 2, exps, nil, 0)
 	if len(cal.Events["28"]) == 0 {
 		t.Fatalf("due_date 31 in February should clamp to day 28")
+	}
+}
+
+func TestCalcNextPayday(t *testing.T) {
+	freq := "biweekly"
+	anchor := "2026-07-17"
+	incomes := []income.Income{{Job: "Vet", PayType: "hourly", PayPerHour: fptr(19), HourPerDay: fptr(11), PayFrequency: &freq, NextPayDate: &anchor}}
+	due6 := 6
+	due10 := 10
+	due17 := 17
+	exps := []expenses.Expense{
+		{Expense: "Internet", Cost: 80, Frequency: "monthly", DueDate: &due6},
+		{Expense: "Rent", Cost: 1000, Frequency: "monthly", DueDate: &due10},
+		{Expense: "Gym", Cost: 50, Frequency: "monthly", DueDate: &due17},
+	}
+	from := time.Date(2026, 7, 6, 0, 0, 0, 0, time.UTC)
+	np := reporting.CalcNextPayday(incomes, exps, income.CalcAnnualGross(incomes), from)
+	if np == nil {
+		t.Fatal("expected next payday")
+	}
+	if np.Date != "2026-07-17" || np.DaysUntil != 11 {
+		t.Fatalf("got %s in %d days, want 2026-07-17 in 11", np.Date, np.DaysUntil)
+	}
+	if !approx(np.Amount, 1368.86, 0.01) {
+		t.Fatalf("Amount = %v, want 1368.86", np.Amount)
+	}
+	if np.Label != "Vet" {
+		t.Fatalf("Label = %q, want Vet", np.Label)
+	}
+	if !approx(np.BillsDue, 1080, 0.01) {
+		t.Fatalf("BillsDue = %v, want 1080", np.BillsDue)
+	}
+}
+
+func TestCalcNextPaydayToday(t *testing.T) {
+	freq := "biweekly"
+	anchor := "2026-07-17"
+	incomes := []income.Income{{Job: "Vet", PayType: "hourly", PayPerHour: fptr(19), HourPerDay: fptr(11), PayFrequency: &freq, NextPayDate: &anchor}}
+	from := time.Date(2026, 7, 17, 0, 0, 0, 0, time.UTC)
+	np := reporting.CalcNextPayday(incomes, nil, income.CalcAnnualGross(incomes), from)
+	if np == nil || np.DaysUntil != 0 || np.Date != "2026-07-17" {
+		t.Fatalf("got %+v, want payday today", np)
+	}
+	if np.BillsDue != 0 {
+		t.Fatalf("BillsDue = %v, want 0", np.BillsDue)
+	}
+}
+
+func TestCalcNextPaydayNil(t *testing.T) {
+	if np := reporting.CalcNextPayday(nil, nil, 0, time.Date(2026, 7, 6, 0, 0, 0, 0, time.UTC)); np != nil {
+		t.Fatalf("expected nil, got %+v", np)
+	}
+}
+
+func TestCalcNextPaydayException(t *testing.T) {
+	freq := "biweekly"
+	anchor := "2026-07-17"
+	incomes := []income.Income{{Job: "Vet", PayType: "hourly", PayPerHour: fptr(19), HourPerDay: fptr(11), PayFrequency: &freq, NextPayDate: &anchor,
+		Exceptions: []income.DateException{{OriginalDate: "2026-07-17", NewDate: "2026-07-20"}}}}
+	from := time.Date(2026, 7, 6, 0, 0, 0, 0, time.UTC)
+	np := reporting.CalcNextPayday(incomes, nil, income.CalcAnnualGross(incomes), from)
+	if np == nil || np.Date != "2026-07-20" || np.DaysUntil != 14 {
+		t.Fatalf("got %+v, want 2026-07-20 in 14 days", np)
 	}
 }
 
