@@ -82,6 +82,9 @@ func (r *mongoRepo) Update(userID, id int, inc Income) (*Income, error) {
 	if inc.PayDay != nil {
 		set["pay_day"] = inc.PayDay
 	}
+	if inc.NextPayDate != nil {
+		set["next_pay_date"] = inc.NextPayDate
+	}
 	if inc.Exceptions != nil {
 		set["exceptions"] = inc.Exceptions
 	}

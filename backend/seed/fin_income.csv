@@ -1,2 +1,2 @@
-Job,pay_type,pay_per_hour,hour_per_day,days_per_week,annual_salary,pay_frequency,pay_day
-Vet Assistant,hourly,19,11,4,,biweekly,17
+Job,pay_type,pay_per_hour,hour_per_day,days_per_week,annual_salary,pay_frequency,pay_day,next_pay_date
+Vet Assistant,hourly,19,11,4,,biweekly,17,2026-07-17

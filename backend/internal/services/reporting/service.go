@@ -228,42 +228,63 @@ func calcPaydays(incomes []income.Income, annualGross float64, year, month, days
 		netRatio := taxes.AnnualNet / annualGross
 		incNet := incGross * netRatio
 
+		var anchor *time.Time
+		if inc.NextPayDate != nil {
+			if parsed, err := time.Parse("2006-01-02", *inc.NextPayDate); err == nil {
+				anchor = &parsed
+			}
+		}
+
 		switch freq {
 		case "weekly":
 			payPerCheck := incNet / 52
-			t := time.Date(year, time.Month(month), 1, 0, 0, 0, 0, time.UTC)
-			for d := t; d.Month() == time.Month(month); d = d.AddDate(0, 0, 1) {
-				if d.Weekday() == time.Friday {
-					day := d.Day()
-					if inc.PayDay != nil {
-						if d.Weekday() != time.Weekday(*inc.PayDay) {
-							continue
-						}
-					}
+			if anchor != nil {
+				for _, day := range anchorDays(*anchor, 7, year, month) {
 					events = append(events, payEvent{Day: day, Amount: utils.Round2(payPerCheck), Label: inc.Job, ID: inc.ID})
+				}
+			} else {
+				t := time.Date(year, time.Month(month), 1, 0, 0, 0, 0, time.UTC)
+				for d := t; d.Month() == time.Month(month); d = d.AddDate(0, 0, 1) {
+					if d.Weekday() == time.Friday {
+						day := d.Day()
+						if inc.PayDay != nil {
+							if d.Weekday() != time.Weekday(*inc.PayDay) {
+								continue
+							}
+						}
+						events = append(events, payEvent{Day: day, Amount: utils.Round2(payPerCheck), Label: inc.Job, ID: inc.ID})
+					}
 				}
 			}
 		case "biweekly":
 			payPerCheck := incNet / 26
-			startDay := 1
-			if inc.PayDay != nil {
-				startDay = *inc.PayDay
-			}
-			monthStart := time.Date(year, time.Month(month), 1, 0, 0, 0, 0, time.UTC)
-			monthEnd := monthStart.AddDate(0, 1, 0)
-			ref := time.Date(year, time.Month(month), startDay, 0, 0, 0, 0, time.UTC)
-			for d := ref; d.Before(monthEnd); d = d.AddDate(0, 0, 14) {
-				if !d.Before(monthStart) {
+			if anchor != nil {
+				for _, day := range anchorDays(*anchor, 14, year, month) {
+					events = append(events, payEvent{Day: day, Amount: utils.Round2(payPerCheck), Label: inc.Job, ID: inc.ID})
+				}
+			} else {
+				startDay := 1
+				if inc.PayDay != nil {
+					startDay = *inc.PayDay
+				}
+				monthStart := time.Date(year, time.Month(month), 1, 0, 0, 0, 0, time.UTC)
+				monthEnd := monthStart.AddDate(0, 1, 0)
+				ref := time.Date(year, time.Month(month), startDay, 0, 0, 0, 0, time.UTC)
+				for d := ref; d.Before(monthEnd); d = d.AddDate(0, 0, 14) {
+					if !d.Before(monthStart) {
+						events = append(events, payEvent{Day: d.Day(), Amount: utils.Round2(payPerCheck), Label: inc.Job, ID: inc.ID})
+					}
+				}
+				for d := ref.AddDate(0, 0, -14); !d.Before(monthStart); d = d.AddDate(0, 0, -14) {
 					events = append(events, payEvent{Day: d.Day(), Amount: utils.Round2(payPerCheck), Label: inc.Job, ID: inc.ID})
 				}
-			}
-			for d := ref.AddDate(0, 0, -14); !d.Before(monthStart); d = d.AddDate(0, 0, -14) {
-				events = append(events, payEvent{Day: d.Day(), Amount: utils.Round2(payPerCheck), Label: inc.Job, ID: inc.ID})
 			}
 		case "monthly":
 			payPerCheck := incNet / 12
 			day := 1
-			if inc.PayDay != nil {
+			if anchor != nil {
+				day = anchor.Day()
+			} else if inc.PayDay != nil {
 				day = *inc.PayDay
 			}
 			if day > daysInMonth {
@@ -274,7 +295,10 @@ func calcPaydays(incomes []income.Income, annualGross float64, year, month, days
 			payPerCheck := utils.Round2(incNet / 24)
 			day1 := 1
 			day2 := 15
-			if inc.PayDay != nil {
+			if anchor != nil {
+				day1 = clampDay(anchor.Day(), daysInMonth)
+				day2 = clampDay(day1+14, daysInMonth)
+			} else if inc.PayDay != nil {
 				day1 = *inc.PayDay
 				day2 = day1 + 14
 				if day2 > daysInMonth {
@@ -286,6 +310,18 @@ func calcPaydays(incomes []income.Income, annualGross float64, year, month, days
 		}
 	}
 	return events
+}
+
+func anchorDays(anchor time.Time, step, year, month int) []int {
+	monthStart := time.Date(year, time.Month(month), 1, 0, 0, 0, 0, time.UTC)
+	monthEnd := monthStart.AddDate(0, 1, 0)
+	diff := int(monthStart.Sub(anchor) / (24 * time.Hour))
+	offset := ((-diff)%step + step) % step
+	var days []int
+	for d := monthStart.AddDate(0, 0, offset); d.Before(monthEnd); d = d.AddDate(0, 0, step) {
+		days = append(days, d.Day())
+	}
+	return days
 }
 
 func ProjectCashflow(liqs []liquid.Liquid, incomes []income.Income, exps []expenses.Expense, annualGross, monthlyExp float64, days int) []CashflowDay {

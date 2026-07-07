@@ -118,6 +118,12 @@ func seedIncome(repo income.Repository, userID int, file string) {
 		if i, ok := col["pay_day"]; ok && i < len(row) {
 			inc.PayDay = utils.CSVInt(row[i])
 		}
+		if i, ok := col["next_pay_date"]; ok && i < len(row) {
+			v := utils.CSVVal(row[i])
+			if v != "" {
+				inc.NextPayDate = &v
+			}
+		}
 		repo.Create(userID, inc)
 	}
 	logger.Log.Info().Str("file", file).Msg("seeded income")

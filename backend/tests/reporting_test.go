@@ -61,6 +61,93 @@ func TestBuildCalendarPaydays(t *testing.T) {
 	}
 }
 
+func TestBuildCalendarBiweeklyAnchor(t *testing.T) {
+	freq := "biweekly"
+	anchor := "2026-07-17"
+	incomes := []income.Income{{Job: "Vet", PayType: "hourly", PayPerHour: fptr(19), HourPerDay: fptr(11), PayFrequency: &freq, NextPayDate: &anchor}}
+	gross := income.CalcAnnualGross(incomes)
+
+	cal := reporting.BuildCalendar(2026, 7, nil, incomes, gross)
+	for _, day := range []string{"3", "17", "31"} {
+		if len(cal.Events[day]) != 1 {
+			t.Fatalf("July: expected payday on day %s, got %v", day, cal.Events[day])
+		}
+		if !approx(cal.Events[day][0].Amount, 1368.86, 0.01) {
+			t.Fatalf("July day %s amount = %v, want 1368.86", day, cal.Events[day][0].Amount)
+		}
+	}
+
+	cal = reporting.BuildCalendar(2026, 8, nil, incomes, gross)
+	for _, day := range []string{"3", "17", "31"} {
+		if len(cal.Events[day]) != 0 {
+			t.Fatalf("August: unexpected payday on day %s", day)
+		}
+	}
+	for _, day := range []string{"14", "28"} {
+		if len(cal.Events[day]) != 1 {
+			t.Fatalf("August: expected payday on day %s", day)
+		}
+	}
+
+	cal = reporting.BuildCalendar(2026, 9, nil, incomes, gross)
+	for _, day := range []string{"11", "25"} {
+		if len(cal.Events[day]) != 1 {
+			t.Fatalf("September: expected payday on day %s", day)
+		}
+	}
+}
+
+func TestBuildCalendarWeeklyAnchor(t *testing.T) {
+	freq := "weekly"
+	anchor := "2026-07-15"
+	incomes := []income.Income{{Job: "J", PayType: "salary", AnnualSalary: fptr(52000), PayFrequency: &freq, NextPayDate: &anchor}}
+	cal := reporting.BuildCalendar(2026, 7, nil, incomes, income.CalcAnnualGross(incomes))
+	for _, day := range []string{"1", "8", "15", "22", "29"} {
+		if len(cal.Events[day]) != 1 {
+			t.Fatalf("expected weekly payday on day %s", day)
+		}
+	}
+	if len(cal.Events["17"]) != 0 {
+		t.Fatalf("Friday fallback should not fire when anchored")
+	}
+}
+
+func TestBuildCalendarMonthlyAnchor(t *testing.T) {
+	freq := "monthly"
+	anchor := "2026-07-31"
+	incomes := []income.Income{{Job: "J", PayType: "salary", AnnualSalary: fptr(60000), PayFrequency: &freq, NextPayDate: &anchor}}
+	cal := reporting.BuildCalendar(2026, 7, nil, incomes, income.CalcAnnualGross(incomes))
+	if len(cal.Events["31"]) != 1 {
+		t.Fatalf("expected payday on July 31")
+	}
+	cal = reporting.BuildCalendar(2026, 9, nil, incomes, income.CalcAnnualGross(incomes))
+	if len(cal.Events["30"]) != 1 {
+		t.Fatalf("expected payday clamped to September 30")
+	}
+}
+
+func TestBuildCalendarSemiMonthlyAnchor(t *testing.T) {
+	freq := "semi-monthly"
+	anchor := "2026-07-20"
+	incomes := []income.Income{{Job: "J", PayType: "salary", AnnualSalary: fptr(60000), PayFrequency: &freq, NextPayDate: &anchor}}
+	cal := reporting.BuildCalendar(2026, 7, nil, incomes, income.CalcAnnualGross(incomes))
+	if len(cal.Events["20"]) != 1 || len(cal.Events["31"]) != 1 {
+		t.Fatalf("expected semi-monthly paydays on 20 and 31")
+	}
+}
+
+func TestBuildCalendarBiweeklyPayDayFallback(t *testing.T) {
+	freq := "biweekly"
+	day := 17
+	incomes := []income.Income{{Job: "J", PayType: "hourly", PayPerHour: fptr(19), HourPerDay: fptr(11), PayFrequency: &freq, PayDay: &day}}
+	cal := reporting.BuildCalendar(2026, 8, nil, incomes, income.CalcAnnualGross(incomes))
+	for _, d := range []string{"3", "17", "31"} {
+		if len(cal.Events[d]) != 1 {
+			t.Fatalf("legacy pay_day fallback: expected payday on day %s", d)
+		}
+	}
+}
+
 func TestBuildCalendarDueDateClamp(t *testing.T) {
 	due := 31
 	exps := []expenses.Expense{{Expense: "rent", Cost: 1000, Frequency: "monthly", DueDate: &due}}
