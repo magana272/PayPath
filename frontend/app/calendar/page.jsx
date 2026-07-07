@@ -368,14 +368,14 @@ function CalendarContent({
 
   const today = new Date();
   const isCurrentMonth = year === today.getFullYear() && month === today.getMonth() + 1;
-  const incomeCap = isCurrentMonth ? today.getDate() : Infinity;
+  const isPastMonth = year < today.getFullYear() || (year === today.getFullYear() && month < today.getMonth() + 1);
+  const incomeCap = isCurrentMonth ? today.getDate() : isPastMonth ? Infinity : 0;
 
   const allEvents = Object.values(data.events).flat();
-  const totalIncome = Object.entries(data.events)
-    .filter(([day]) => Number(day) <= incomeCap)
-    .flatMap(([, events]) => events)
-    .filter(e => e.type === "payday")
-    .reduce((s, e) => s + e.amount, 0);
+  const paydays = Object.entries(data.events)
+    .flatMap(([day, events]) => events.filter((e) => e.type === "payday").map((e) => ({ day: Number(day), amount: e.amount })));
+  const receivedIncome = paydays.filter((p) => p.day <= incomeCap).reduce((s, p) => s + p.amount, 0);
+  const upcomingIncome = paydays.filter((p) => p.day > incomeCap).reduce((s, p) => s + p.amount, 0);
   const totalBills = allEvents.filter(e => e.type === "bill").reduce((s, e) => s + e.amount, 0);
 
   const activeSource = activeEvent ? findSourceItem(activeEvent.ev) : null;
@@ -384,8 +384,12 @@ function CalendarContent({
     <>
       <div className={cs.grid}>
         <div className={cs.card}>
-          <h2 className={cs.cardTitle}>Income This Month</h2>
-          <p className="big-number green">${totalIncome.toLocaleString()}</p>
+          <h2 className={cs.cardTitle}>Received So Far</h2>
+          <p className="big-number green">${receivedIncome.toLocaleString()}</p>
+        </div>
+        <div className={cs.card}>
+          <h2 className={cs.cardTitle}>Upcoming Income</h2>
+          <p className="big-number green">${upcomingIncome.toLocaleString()}</p>
         </div>
         <div className={cs.card}>
           <h2 className={cs.cardTitle}>Bills Due This Month</h2>
@@ -393,8 +397,8 @@ function CalendarContent({
         </div>
         <div className={`${cs.card} ${cs.accent}`}>
           <h2 className={cs.cardTitle}>Net After Bills</h2>
-          <p className={`big-number ${totalIncome - totalBills < 0 ? "red" : ""}`}>
-            ${(totalIncome - totalBills).toFixed(2)}
+          <p className={`big-number ${receivedIncome + upcomingIncome - totalBills < 0 ? "red" : ""}`}>
+            ${(receivedIncome + upcomingIncome - totalBills).toFixed(2)}
           </p>
         </div>
       </div>
