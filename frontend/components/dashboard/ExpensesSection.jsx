@@ -17,7 +17,7 @@ export default function ExpensesSection({ expenses }) {
     <div className={ds.section}>
       <div className={ds.sectionHeader}>
         <span>Expenses</span>
-        <Link href="/settings?tab=expenses" className={ds.manageLink}>Manage →</Link>
+        <Link href="/settings?tab=expenses" className={ds.manageLink} aria-label="Manage expenses">Manage →</Link>
       </div>
       <div className={ds.list}>
         {visible.map((e) => (

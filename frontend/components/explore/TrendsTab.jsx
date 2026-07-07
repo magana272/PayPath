@@ -70,9 +70,9 @@ export default function TrendsTab({ debts, summary, liquid, expenses, heatmap, p
         <div className={cg.card} style={{ display: "flex", alignItems: "center", gap: 16 }}>
           <RadialProgress value={monthsCovered} max={6} color={efColor} size={72} />
           <div>
-            <h3 className={cg.cardTitle}>Emergency Fund</h3>
+            <h2 className={cg.cardTitle}>Emergency Fund</h2>
             <p className="big-number">{monthsCovered.toFixed(1)} mo</p>
-            <span style={{ fontSize: 10, color: "var(--text-muted)", fontFamily: "IBM Plex Mono, monospace" }}>of expenses covered · target 3–6</span>
+            <span style={{ fontSize: 10, color: "var(--text-muted)", fontFamily: "var(--font-mono), monospace" }}>of expenses covered · target 3–6</span>
           </div>
         </div>
       </div>
@@ -82,7 +82,7 @@ export default function TrendsTab({ debts, summary, liquid, expenses, heatmap, p
         {netWorthSeries.length > 1 ? (
           <GradientArea data={netWorthSeries} dataKey="net_worth" xKey="month" referenceLine={0} referenceLabel="Break-even" height={300} color={COLORS[2]} />
         ) : (
-          <p style={{ color: "var(--text-muted)", fontFamily: "IBM Plex Mono, monospace", fontSize: 12 }}>Not enough data to project net worth.</p>
+          <p style={{ color: "var(--text-muted)", fontFamily: "var(--font-mono), monospace", fontSize: 12 }}>Not enough data to project net worth.</p>
         )}
       </div>
 
@@ -117,7 +117,7 @@ export default function TrendsTab({ debts, summary, liquid, expenses, heatmap, p
           </DataTable>
         </>
       ) : (
-        <p style={{ color: "var(--text-muted)", fontFamily: "IBM Plex Mono, monospace", fontSize: 12 }}>No debt to show.</p>
+        <p style={{ color: "var(--text-muted)", fontFamily: "var(--font-mono), monospace", fontSize: 12 }}>No debt to show.</p>
       )}
       </div>
 
@@ -152,7 +152,7 @@ export default function TrendsTab({ debts, summary, liquid, expenses, heatmap, p
             </DataTable>
           </>
         ) : (
-          <p style={{ color: "var(--text-muted)", fontFamily: "IBM Plex Mono, monospace", fontSize: 12 }}>No expenses to show.</p>
+          <p style={{ color: "var(--text-muted)", fontFamily: "var(--font-mono), monospace", fontSize: 12 }}>No expenses to show.</p>
         )}
       </div>
 
@@ -170,7 +170,7 @@ export default function TrendsTab({ debts, summary, liquid, expenses, heatmap, p
             ]}
           />
         ) : (
-          <p style={{ color: "var(--text-muted)", fontFamily: "IBM Plex Mono, monospace", fontSize: 12 }}>Add debts and a positive monthly surplus to project the payoff breakdown.</p>
+          <p style={{ color: "var(--text-muted)", fontFamily: "var(--font-mono), monospace", fontSize: 12 }}>Add debts and a positive monthly surplus to project the payoff breakdown.</p>
         )}
       </div>
 
@@ -179,10 +179,10 @@ export default function TrendsTab({ debts, summary, liquid, expenses, heatmap, p
         {heatmap && Object.keys(heatmap.map).length > 0 ? (
           <>
             <CalendarHeatmap year={heatmap.year} map={heatmap.map} />
-            <p style={{ marginTop: 10, fontSize: 10, color: "var(--text-muted)", fontFamily: "IBM Plex Mono, monospace" }}>Green = income-heavy days · Red = bill-heavy days</p>
+            <p style={{ marginTop: 10, fontSize: 10, color: "var(--text-muted)", fontFamily: "var(--font-mono), monospace" }}>Green = income-heavy days · Red = bill-heavy days</p>
           </>
         ) : (
-          <p style={{ color: "var(--text-muted)", fontFamily: "IBM Plex Mono, monospace", fontSize: 12 }}>Loading calendar…</p>
+          <p style={{ color: "var(--text-muted)", fontFamily: "var(--font-mono), monospace", fontSize: 12 }}>Loading calendar…</p>
         )}
       </div>
 
@@ -191,10 +191,10 @@ export default function TrendsTab({ debts, summary, liquid, expenses, heatmap, p
         {paydayFlow && paydayFlow.length > 1 ? (
           <>
             <PaydayWaterfall steps={paydayFlow} />
-            <p style={{ marginTop: 10, fontSize: 10, color: "var(--text-muted)", fontFamily: "IBM Plex Mono, monospace" }}>How one paycheck is consumed by bills before the next payday</p>
+            <p style={{ marginTop: 10, fontSize: 10, color: "var(--text-muted)", fontFamily: "var(--font-mono), monospace" }}>How one paycheck is consumed by bills before the next payday</p>
           </>
         ) : (
-          <p style={{ color: "var(--text-muted)", fontFamily: "IBM Plex Mono, monospace", fontSize: 12 }}>No paydays this month to chart.</p>
+          <p style={{ color: "var(--text-muted)", fontFamily: "var(--font-mono), monospace", fontSize: 12 }}>No paydays this month to chart.</p>
         )}
       </div>
     </>

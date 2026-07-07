@@ -12,13 +12,11 @@ import (
 
 var ErrNoAPIKey = errors.New("OPENAI_API_KEY not set")
 
-const systemPrompt = "You are a personal finance advisor. Respond ONLY with valid JSON matching the exact schema provided. No markdown, no code fences, no extra text."
-
 func Configured() bool {
 	return os.Getenv("OPENAI_API_KEY") != ""
 }
 
-func Chat(ctx context.Context, prompt string) (string, error) {
+func Chat(ctx context.Context, systemPrompt, prompt string) (string, error) {
 	key := os.Getenv("OPENAI_API_KEY")
 	if key == "" {
 		return "", ErrNoAPIKey
@@ -38,6 +36,9 @@ func Chat(ctx context.Context, prompt string) (string, error) {
 	})
 	if err != nil {
 		return "", fmt.Errorf("AI request failed: %w", err)
+	}
+	if len(resp.Choices) == 0 {
+		return "", errors.New("AI returned no choices")
 	}
 	return resp.Choices[0].Message.Content, nil
 }

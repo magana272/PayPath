@@ -10,7 +10,7 @@ export default function LiquidSection({ liquid }) {
     <div className={ds.section}>
       <div className={ds.sectionHeader}>
         <span>Liquid Accounts</span>
-        <Link href="/settings" className={ds.manageLink}>Manage →</Link>
+        <Link href="/settings" className={ds.manageLink} aria-label="Manage liquid accounts">Manage →</Link>
       </div>
       <div className={ds.list}>
         {liquid.map((l) => (

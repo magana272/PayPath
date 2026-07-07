@@ -43,7 +43,7 @@ export default function CalendarHeatmap({ year, map }) {
       <div style={{ display: "flex", gap: 3, minWidth: "min-content" }}>
         {weeks.map((week, wi) => (
           <div key={wi} style={{ display: "flex", flexDirection: "column", gap: 3 }}>
-            <span style={{ height: 10, fontSize: 8, fontFamily: "IBM Plex Mono, monospace", color: "#8a8e96" }}>
+            <span style={{ height: 10, fontSize: 8, fontFamily: "var(--font-mono), monospace", color: "#8a8e96" }}>
               {weekLabels[wi]}
             </span>
             {Array.from({ length: 7 }, (_, di) => {

@@ -13,6 +13,14 @@ type InterestAccount struct {
 	APR             float64 `json:"apr"`
 }
 
+type NextPayday struct {
+	Date      string  `json:"date"`
+	DaysUntil int     `json:"days_until"`
+	Amount    float64 `json:"amount"`
+	Label     string  `json:"label"`
+	BillsDue  float64 `json:"bills_due"`
+}
+
 type Summary struct {
 	MonthlyGross      float64             `json:"monthly_gross"`
 	Taxes             income.TaxBreakdown `json:"taxes"`
@@ -27,6 +35,7 @@ type Summary struct {
 	SavingsRate       float64             `json:"savings_rate"`
 	TaxBreakdownList  []TaxItem           `json:"tax_breakdown"`
 	InterestByAccount []InterestAccount   `json:"interest_by_account"`
+	NextPayday        *NextPayday         `json:"next_payday,omitempty"`
 }
 
 type Scenario struct {

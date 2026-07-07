@@ -96,6 +96,7 @@ export const api = {
       return { events, first_weekday: firstWeekday, days_in_month: daysInMonth, month_name: MONTH_NAMES[month - 1], year };
     })
   ),
+  getAIStatus: () => authFetch("/ai/status"),
   getAIInsights: () => authFetch("/ai/insights"),
   getAIDebtPayoff: () => authFetch("/ai/debt-payoff-strategy"),
   getAISavingsPlan: () => authFetch("/ai/savings-plan"),

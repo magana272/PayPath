@@ -28,7 +28,7 @@ export default function PaydayWaterfall({ steps }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
       {rows.map((r, i) => (
-        <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, fontFamily: "IBM Plex Mono, monospace", fontSize: 11 }}>
+        <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, fontFamily: "var(--font-mono), monospace", fontSize: 11 }}>
           <span style={{ width: 130, textAlign: "right", color: "#4a4e57", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.name}</span>
           <div style={{ position: "relative", flex: 1, height: 18, background: "#f4f5f7" }}>
             <div style={{ position: "absolute", left: `${r.left}%`, width: `${r.width}%`, top: 0, bottom: 0, background: r.color }} />

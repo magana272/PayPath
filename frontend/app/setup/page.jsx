@@ -8,9 +8,9 @@ import styles from "./setup.module.css";
 
 const STEPS = [
   { id: "income", label: "Income" },
+  { id: "liquid", label: "Accounts" },
   { id: "expenses", label: "Expenses" },
   { id: "debts", label: "Debts", optional: true },
-  { id: "liquid", label: "Accounts", optional: true },
 ];
 
 export default function SetupPage() {
@@ -123,7 +123,7 @@ export default function SetupPage() {
 
         {/* Step content */}
         <div className={styles.stepBody}>
-          {step === 0 && (
+          {STEPS[step].id === "income" && (
             <>
               <h2 className={styles.stepTitle}>Add Income Sources</h2>
               <p className={styles.stepDesc}>Add your jobs — hourly or salaried.</p>
@@ -148,7 +148,7 @@ export default function SetupPage() {
             </>
           )}
 
-          {step === 1 && (
+          {STEPS[step].id === "expenses" && (
             <>
               <h2 className={styles.stepTitle}>Add Expenses</h2>
               <p className={styles.stepDesc}>Rent, subscriptions, bills, etc.</p>
@@ -179,7 +179,7 @@ export default function SetupPage() {
             </>
           )}
 
-          {step === 2 && (
+          {STEPS[step].id === "debts" && (
             <>
               <h2 className={styles.stepTitle}>Add Debts</h2>
               <p className={styles.stepDesc}>Credit cards, loans, etc.</p>
@@ -213,11 +213,10 @@ export default function SetupPage() {
             </>
           )}
 
-          {step === 3 && (
+          {STEPS[step].id === "liquid" && (
             <>
-              <h2 className={styles.stepTitle}>Liquid Accounts</h2>
-              <p className={styles.stepDesc}>Checking, savings, cash, etc.</p>
-              <p className={styles.stepDesc}>Optional — you can skip this.</p>
+              <h2 className={styles.stepTitle}>What&apos;s in your account right now?</h2>
+              <p className={styles.stepDesc}>Enter today&apos;s balance for checking, savings, or cash. PayPath uses this to show what you can spend until your next payday.</p>
               <form className={styles.form} onSubmit={addLiquidAccount}>
                 <div className={styles.row}>
                   <input className={styles.input} placeholder="Bank name" value={liquidForm.bank} onChange={(e) => setLiquidForm({ ...liquidForm, bank: e.target.value })} required />

@@ -11,25 +11,25 @@ export default function DebtsSection({ debts, summary }) {
     <div className={ds.section}>
       <div className={ds.sectionHeader}>
         <span>Debts</span>
-        <Link href="/settings?tab=debts" className={ds.manageLink}>Manage →</Link>
+        <Link href="/settings?tab=debts" className={ds.manageLink} aria-label="Manage debts">Manage →</Link>
       </div>
       <div className={styles.grid} style={{ marginBottom: 6 }}>
         <div className={styles.card}>
-          <h3 className={styles.cardTitle}>Total Owed</h3>
+          <h2 className={styles.cardTitle}>Total Owed</h2>
           <p className="big-number red">${totalDebt.toLocaleString()}</p>
         </div>
         <div className={styles.card}>
-          <h3 className={styles.cardTitle}>Accounts</h3>
+          <h2 className={styles.cardTitle}>Accounts</h2>
           <p className="big-number">{debts.length}</p>
         </div>
         {summary && (
           <>
             <div className={styles.card}>
-              <h3 className={styles.cardTitle}>Monthly Interest</h3>
+              <h2 className={styles.cardTitle}>Monthly Interest</h2>
               <p className="big-number red">${summary.monthly_interest.toLocaleString()}</p>
             </div>
             <div className={styles.card}>
-              <h3 className={styles.cardTitle}>DTI</h3>
+              <h2 className={styles.cardTitle}>DTI</h2>
               <p className={`big-number ${summary.dti > 80 ? "red" : ""}`}>{summary.dti}%</p>
             </div>
           </>

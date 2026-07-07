@@ -15,8 +15,8 @@ RUN npm run build
 FROM node:24-alpine
 WORKDIR /app
 ENV NODE_ENV=production PORT=3000 HOSTNAME=0.0.0.0
-COPY --from=build /app/.next/standalone ./
-COPY --from=build /app/.next/static ./.next/static
-COPY --from=build /app/public ./public
+COPY --from=build /app/.next ./.next
+COPY --from=build /app/node_modules ./node_modules
+COPY --from=build /app/package.json ./package.json
 EXPOSE 3000
-CMD ["node", "server.js"]
+CMD ["npm", "start"]

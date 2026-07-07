@@ -1,6 +1,6 @@
 # PayPath
 
-Personal finance dashboard: track income, expenses, debts, and liquid assets; get computed taxes, net worth, debt payoff timelines, cash flow projections, and AI-powered insights.
+Personal finance dashboard: track income, expenses, debts, and liquid assets; get computed taxes, net worth, debt payoff timelines, cash-flow projections, a bill & income calendar, trend visualizations, and AI-powered insights.
 
 Monorepo with two apps:
 
@@ -49,7 +49,7 @@ docker compose up -d mongo
 | `make dev-frontend` | `cd frontend && make dev` |
 | `make test` | `cd backend && make test` |
 
-### 1. Backend (Go 1.22+)
+### 1. Backend (Go 1.26)
 
 ```bash
 cd backend
@@ -71,7 +71,9 @@ Environment (read from the root `.env` or the shell):
 
 On first run the backend seeds demo data from `backend/seed/*.csv`. `make reseed` drops the database so it re-seeds on next start.
 
-### 2. Frontend (Node 24)
+### 2. Frontend (Node 20+)
+
+Next.js 16 requires Node ≥ 20.9 (`.nvmrc` pins 20; the Docker image uses Node 24).
 
 ```bash
 cd frontend
@@ -80,10 +82,22 @@ npm install
 make dev                     # next dev on :3000
 ```
 
+Fonts are self-hosted via `next/font` (no external Google Fonts request).
+
 ## Architecture
 
 - **Backend** is a layered, feature-folder Go module: thin HTTP handlers call per-feature services (`income`, `expenses`, `debts`, `auth`, `reporting`, `ai/*`, etc.), which depend on repository interfaces over MongoDB, with an in-memory TTL cache and singleflight read-collapsing. JWT + bcrypt auth. See `backend/README.md`.
-- **Frontend** is a Next.js App Router app: dashboard, explore (payoff / scenarios / cashflow / AI insights), calendar, and settings pages, calling the API via a small fetch wrapper with client-side caching. See `frontend/README.md`.
+- **Frontend** is a Next.js App Router app: a dashboard, an Explore section (debt payoff, cash flow, pay & tax breakdowns, trend charts, and AI insights), a bill & income calendar with per-occurrence edits (move a bill, log a one-time payment, or override a paycheck's actual amount for one day), and settings — calling the API via a small fetch wrapper with client-side caching. Recharts powers the visualizations. See `frontend/README.md`.
+
+## Deployment
+
+The two apps deploy independently to separate hosts, plus a managed database:
+
+- **Frontend → Vercel.** In the Vercel project set **Root Directory** to `frontend` — this is a monorepo, so Vercel must build from the sub-directory (a root build fails with "build script … calls `next build`"). Add the build-time env var `NEXT_PUBLIC_API_URL` = the deployed backend, e.g. `https://<your-backend>.onrender.com/api`. Vercel auto-detects Next.js and runs `next build`; no `output` override is needed.
+- **Backend → Render.** Deploy `backend/` as a Docker web service (uses `backend/Dockerfile`, listening on `:8000`). Set the environment variables from the table above — at minimum `MONGODB_URI`, `JWT_SECRET`, and `FRONTEND_URL` (the Vercel origin, so CORS allows it).
+- **Database → MongoDB Atlas.** Point `MONGODB_URI` at your Atlas cluster; the backend seeds demo data on first run against an empty database.
+
+Both services build from `main`, so pushing redeploys the affected side. `NEXT_PUBLIC_*` values are inlined at build time, so changing the API URL requires a frontend rebuild.
 
 ## Testing
 

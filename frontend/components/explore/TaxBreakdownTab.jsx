@@ -23,16 +23,16 @@ export default function TaxBreakdownTab({ summary }) {
     <>
       <div className={styles.grid}>
         <div className={styles.card}>
-          <h3 className={styles.cardTitle}>Annual Gross</h3>
+          <h2 className={styles.cardTitle}>Annual Gross</h2>
           <p className="big-number">${summary.taxes.annual_gross.toLocaleString()}</p>
         </div>
         <div className={styles.card}>
-          <h3 className={styles.cardTitle}>Annual Net</h3>
+          <h2 className={styles.cardTitle}>Annual Net</h2>
           <p className="big-number">${summary.taxes.annual_net.toLocaleString()}</p>
         </div>
         <div className={styles.card} style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <div>
-            <h3 className={styles.cardTitle}>Effective Rate</h3>
+            <h2 className={styles.cardTitle}>Effective Rate</h2>
             <p className="big-number">{effectiveTaxRate.toFixed(1)}%</p>
           </div>
           <RadialProgress value={effectiveTaxRate} max={50} color="#111111" size={48} />

@@ -2,6 +2,7 @@ package insights
 
 import (
 	"context"
+	_ "embed"
 	"encoding/json"
 	"fmt"
 
@@ -11,6 +12,9 @@ import (
 	"paypath/internal/services/income"
 	"paypath/internal/services/reporting"
 )
+
+//go:embed system_prompt.txt
+var systemPrompt string
 
 type Service struct {
 	cache   Repository
@@ -43,7 +47,7 @@ func (s *Service) Get(ctx context.Context, uid int) (Insights, error) {
 	surplus := taxes.MonthlyNet - expenses.CalcMonthly(exps)
 	payoff := debts.RunAvalanche(dbts, surplus)
 
-	raw, err := clients.Chat(ctx, buildPrompt(summary, payoff, dbts, exps))
+	raw, err := clients.Chat(ctx, systemPrompt, buildPrompt(summary, payoff, dbts, exps))
 	if err != nil {
 		return Insights{}, err
 	}

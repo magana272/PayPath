@@ -11,7 +11,7 @@ export default function PayBreakdownTab({ summary, jobs, payBreakdown }) {
   const totalWeeklyGross = payBreakdown.reduce((s, j) => s + j.weekly, 0);
   const hourlyEffective = summary.taxes.annual_net / (52 * payBreakdown.reduce((s, j) => {
     const job = jobs.find((jj) => jj.job === j.name);
-    return s + (job ? job.hour_per_day * 4 : 0);
+    return s + (job ? job.hour_per_day * (job.days_per_week || 4) : 0);
   }, 0) || 1);
   const savingsRate = summary.monthly_surplus / summary.taxes.monthly_net * 100;
 
@@ -31,27 +31,27 @@ export default function PayBreakdownTab({ summary, jobs, payBreakdown }) {
     <>
       <div className={styles.grid}>
         <div className={styles.card}>
-          <h3 className={styles.cardTitle}>Monthly Gross</h3>
+          <h2 className={styles.cardTitle}>Monthly Gross</h2>
           <p className="big-number">${summary.monthly_gross.toLocaleString()}</p>
         </div>
         <div className={styles.card}>
-          <h3 className={styles.cardTitle}>Monthly Net</h3>
+          <h2 className={styles.cardTitle}>Monthly Net</h2>
           <p className="big-number">${summary.taxes.monthly_net.toLocaleString()}</p>
         </div>
         <div className={styles.card}>
-          <h3 className={styles.cardTitle}>Annual Gross</h3>
+          <h2 className={styles.cardTitle}>Annual Gross</h2>
           <p className="big-number">${summary.taxes.annual_gross.toLocaleString()}</p>
         </div>
         <div className={styles.card}>
-          <h3 className={styles.cardTitle}>Annual Net</h3>
+          <h2 className={styles.cardTitle}>Annual Net</h2>
           <p className="big-number">${summary.taxes.annual_net.toLocaleString()}</p>
         </div>
         <div className={styles.card}>
-          <h3 className={styles.cardTitle}>Effective $/hr</h3>
+          <h2 className={styles.cardTitle}>Effective $/hr</h2>
           <p className="big-number">${hourlyEffective.toFixed(2)}</p>
         </div>
         <div className={`${styles.card}${savingsRate >= 0 ? ` ${styles.accent}` : ` ${styles.danger}`}`}>
-          <h3 className={styles.cardTitle}>Savings Rate</h3>
+          <h2 className={styles.cardTitle}>Savings Rate</h2>
           <p className={`big-number ${savingsRate < 0 ? "red" : ""}`}>{savingsRate.toFixed(1)}%</p>
         </div>
       </div>

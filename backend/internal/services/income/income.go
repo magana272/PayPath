@@ -13,9 +13,11 @@ type Income struct {
 	PayType      string          `json:"pay_type" bson:"pay_type"`
 	PayPerHour   *float64        `json:"pay_per_hour" bson:"pay_per_hour,omitempty"`
 	HourPerDay   *float64        `json:"hour_per_day" bson:"hour_per_day,omitempty"`
+	DaysPerWeek  *float64        `json:"days_per_week" bson:"days_per_week,omitempty"`
 	AnnualSalary *float64        `json:"annual_salary" bson:"annual_salary,omitempty"`
 	PayFrequency *string         `json:"pay_frequency" bson:"pay_frequency,omitempty"`
 	PayDay       *int            `json:"pay_day" bson:"pay_day,omitempty"`
+	NextPayDate  *string         `json:"next_pay_date" bson:"next_pay_date,omitempty"`
 	Date         *string         `json:"date" bson:"date,omitempty"`
 	Exceptions   []DateException `json:"exceptions" bson:"exceptions,omitempty"`
 }

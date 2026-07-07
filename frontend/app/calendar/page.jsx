@@ -158,9 +158,10 @@ export default function Calendar() {
         pay_type: source.item.pay_type || "hourly",
         pay_per_hour: source.item.pay_per_hour ?? "",
         hour_per_day: source.item.hour_per_day ?? "",
+        days_per_week: source.item.days_per_week ?? 4,
         annual_salary: source.item.annual_salary ?? "",
         pay_frequency: source.item.pay_frequency || "semi-monthly",
-        pay_day: source.item.pay_day ?? "",
+        next_pay_date: source.item.next_pay_date ?? "",
       });
     }
     setEventAction("edit");
@@ -198,16 +199,18 @@ export default function Calendar() {
           job: editForm.job,
           pay_type: editForm.pay_type,
           pay_frequency: editForm.pay_frequency,
-          pay_day: editForm.pay_day ? parseInt(editForm.pay_day) : null,
+          next_pay_date: editForm.next_pay_date || null,
         };
         if (editForm.pay_type === "hourly") {
           data.pay_per_hour = parseFloat(editForm.pay_per_hour);
           data.hour_per_day = parseFloat(editForm.hour_per_day);
+          data.days_per_week = editForm.days_per_week ? parseFloat(editForm.days_per_week) : null;
           data.annual_salary = null;
         } else {
           data.annual_salary = parseFloat(editForm.annual_salary);
           data.pay_per_hour = null;
           data.hour_per_day = null;
+          data.days_per_week = null;
         }
         await api.updateIncome(source.item.id, data);
       }
@@ -365,14 +368,14 @@ function CalendarContent({
 
   const today = new Date();
   const isCurrentMonth = year === today.getFullYear() && month === today.getMonth() + 1;
-  const incomeCap = isCurrentMonth ? today.getDate() : Infinity;
+  const isPastMonth = year < today.getFullYear() || (year === today.getFullYear() && month < today.getMonth() + 1);
+  const incomeCap = isCurrentMonth ? today.getDate() : isPastMonth ? Infinity : 0;
 
   const allEvents = Object.values(data.events).flat();
-  const totalIncome = Object.entries(data.events)
-    .filter(([day]) => Number(day) <= incomeCap)
-    .flatMap(([, events]) => events)
-    .filter(e => e.type === "payday")
-    .reduce((s, e) => s + e.amount, 0);
+  const paydays = Object.entries(data.events)
+    .flatMap(([day, events]) => events.filter((e) => e.type === "payday").map((e) => ({ day: Number(day), amount: e.amount })));
+  const receivedIncome = paydays.filter((p) => p.day <= incomeCap).reduce((s, p) => s + p.amount, 0);
+  const upcomingIncome = paydays.filter((p) => p.day > incomeCap).reduce((s, p) => s + p.amount, 0);
   const totalBills = allEvents.filter(e => e.type === "bill").reduce((s, e) => s + e.amount, 0);
 
   const activeSource = activeEvent ? findSourceItem(activeEvent.ev) : null;
@@ -381,17 +384,21 @@ function CalendarContent({
     <>
       <div className={cs.grid}>
         <div className={cs.card}>
-          <h3 className={cs.cardTitle}>Income This Month</h3>
-          <p className="big-number green">${totalIncome.toLocaleString()}</p>
+          <h2 className={cs.cardTitle}>Received So Far</h2>
+          <p className="big-number green">${receivedIncome.toLocaleString()}</p>
         </div>
         <div className={cs.card}>
-          <h3 className={cs.cardTitle}>Bills Due This Month</h3>
+          <h2 className={cs.cardTitle}>Upcoming Income</h2>
+          <p className="big-number green">${upcomingIncome.toLocaleString()}</p>
+        </div>
+        <div className={cs.card}>
+          <h2 className={cs.cardTitle}>Bills Due This Month</h2>
           <p className="big-number red">${totalBills.toFixed(2)}</p>
         </div>
         <div className={`${cs.card} ${cs.accent}`}>
-          <h3 className={cs.cardTitle}>Net After Bills</h3>
-          <p className={`big-number ${totalIncome - totalBills < 0 ? "red" : ""}`}>
-            ${(totalIncome - totalBills).toFixed(2)}
+          <h2 className={cs.cardTitle}>Net After Bills</h2>
+          <p className={`big-number ${receivedIncome + upcomingIncome - totalBills < 0 ? "red" : ""}`}>
+            ${(receivedIncome + upcomingIncome - totalBills).toFixed(2)}
           </p>
         </div>
       </div>
@@ -596,6 +603,7 @@ function CalendarContent({
               <div className={modalStyles.formRow}>
                 <input type="number" step="0.01" placeholder="$/hour" value={editForm.pay_per_hour || ""} onChange={(e) => setEditForm({ ...editForm, pay_per_hour: e.target.value })} required />
                 <input type="number" step="0.5" placeholder="Hours/day" value={editForm.hour_per_day || ""} onChange={(e) => setEditForm({ ...editForm, hour_per_day: e.target.value })} required />
+                <input type="number" step="0.5" min="1" max="7" placeholder="Days/week" value={editForm.days_per_week || ""} onChange={(e) => setEditForm({ ...editForm, days_per_week: e.target.value })} required />
               </div>
             ) : (
               <input type="number" step="0.01" placeholder="Annual salary" value={editForm.annual_salary || ""} onChange={(e) => setEditForm({ ...editForm, annual_salary: e.target.value })} required />
@@ -608,8 +616,11 @@ function CalendarContent({
                 <option value="monthly">Monthly</option>
                 <option value="one-time">One-time</option>
               </select>
-              {(editForm.pay_frequency === "biweekly" || editForm.pay_frequency === "monthly") && (
-                <input type="number" min="1" max="31" placeholder="Pay day" value={editForm.pay_day || ""} onChange={(e) => setEditForm({ ...editForm, pay_day: e.target.value })} />
+              {(editForm.pay_frequency || "semi-monthly") !== "one-time" && (
+                <label className={modalStyles.fieldLabel}>
+                  Next payday
+                  <input type="date" value={editForm.next_pay_date || ""} onChange={(e) => setEditForm({ ...editForm, next_pay_date: e.target.value })} />
+                </label>
               )}
             </div>
             <button type="submit" className={modalStyles.submit} disabled={saving}>
