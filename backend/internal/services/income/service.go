@@ -7,7 +7,14 @@ import (
 	"paypath/pkg/utils"
 )
 
-const DaysPerWeek = 4
+const DefaultDaysPerWeek = 4.0
+
+func WorkDaysPerWeek(inc Income) float64 {
+	if inc.DaysPerWeek != nil && *inc.DaysPerWeek > 0 {
+		return *inc.DaysPerWeek
+	}
+	return DefaultDaysPerWeek
+}
 
 type TaxBreakdown struct {
 	AnnualGross    float64 `json:"annual_gross"`
@@ -99,22 +106,22 @@ func CalcAnnualGross(incomes []Income) float64 {
 		if inc.PayType == "salary" && inc.AnnualSalary != nil {
 			total += *inc.AnnualSalary
 		} else if inc.PayPerHour != nil && inc.HourPerDay != nil {
-			total += *inc.PayPerHour * *inc.HourPerDay * DaysPerWeek * 52
+			total += *inc.PayPerHour * *inc.HourPerDay * WorkDaysPerWeek(inc) * 52
 		}
 	}
 	return total
 }
 
-func TotalHoursPerDay(incomes []Income) float64 {
+func TotalWeeklyHours(incomes []Income) float64 {
 	total := 0.0
 	for _, inc := range incomes {
 		if inc.PayFrequency != nil && *inc.PayFrequency == "one-time" {
 			continue
 		}
 		if inc.HourPerDay != nil {
-			total += *inc.HourPerDay
+			total += *inc.HourPerDay * WorkDaysPerWeek(inc)
 		} else if inc.PayType == "salary" {
-			total += 8
+			total += 8 * DefaultDaysPerWeek
 		}
 	}
 	return total
@@ -134,7 +141,7 @@ func PayAmount(inc Income, annualGross float64) float64 {
 	if inc.PayType == "salary" && inc.AnnualSalary != nil {
 		incGross = *inc.AnnualSalary
 	} else if inc.PayPerHour != nil && inc.HourPerDay != nil {
-		incGross = *inc.PayPerHour * *inc.HourPerDay * DaysPerWeek * 52
+		incGross = *inc.PayPerHour * *inc.HourPerDay * WorkDaysPerWeek(inc) * 52
 	}
 	if incGross == 0 || annualGross == 0 {
 		return 0

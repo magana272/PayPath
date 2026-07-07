@@ -70,6 +70,9 @@ func (r *mongoRepo) Update(userID, id int, inc Income) (*Income, error) {
 	if inc.HourPerDay != nil {
 		set["hour_per_day"] = inc.HourPerDay
 	}
+	if inc.DaysPerWeek != nil {
+		set["days_per_week"] = inc.DaysPerWeek
+	}
 	if inc.AnnualSalary != nil {
 		set["annual_salary"] = inc.AnnualSalary
 	}

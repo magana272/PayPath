@@ -125,9 +125,9 @@ func BuildSummary(incomes []income.Income, exps []expenses.Expense, dbts []debts
 func SolveScenarios(dbts []debts.Debt, exps []expenses.Expense, incomes []income.Income) []Scenario {
 	targets := []int{12, 24, 36, 48, 60, 84, 120}
 	monthlyExp := expenses.CalcMonthly(exps)
-	hours := income.TotalHoursPerDay(incomes)
-	if hours == 0 {
-		hours = 8
+	weeklyHours := income.TotalWeeklyHours(incomes)
+	if weeklyHours == 0 {
+		weeklyHours = 8 * income.DefaultDaysPerWeek
 	}
 
 	scenarios := make([]Scenario, len(targets))
@@ -136,7 +136,7 @@ func SolveScenarios(dbts []debts.Debt, exps []expenses.Expense, incomes []income
 		wg.Add(1)
 		go func(i, target int) {
 			defer wg.Done()
-			rate := binarySearchRate(dbts, monthlyExp, hours, target)
+			rate := binarySearchRate(dbts, monthlyExp, weeklyHours, target)
 			scenarios[i] = Scenario{Months: target, HourlyRate: utils.Round2(rate)}
 		}(i, target)
 	}
@@ -144,11 +144,11 @@ func SolveScenarios(dbts []debts.Debt, exps []expenses.Expense, incomes []income
 	return scenarios
 }
 
-func binarySearchRate(dbts []debts.Debt, monthlyExp, hoursPerDay float64, targetMonths int) float64 {
+func binarySearchRate(dbts []debts.Debt, monthlyExp, weeklyHours float64, targetMonths int) float64 {
 	lo, hi := 0.0, 500.0
 	for i := 0; i < 100; i++ {
 		mid := (lo + hi) / 2
-		annualGross := mid * hoursPerDay * income.DaysPerWeek * 52
+		annualGross := mid * weeklyHours * 52
 		taxes := income.CalcTaxes(annualGross)
 		surplus := taxes.MonthlyNet - monthlyExp
 		result := debts.RunAvalanche(dbts, surplus)
@@ -219,7 +219,7 @@ func calcPaydays(incomes []income.Income, annualGross float64, year, month, days
 		if inc.PayType == "salary" && inc.AnnualSalary != nil {
 			incGross = *inc.AnnualSalary
 		} else if inc.PayPerHour != nil && inc.HourPerDay != nil {
-			incGross = *inc.PayPerHour * *inc.HourPerDay * income.DaysPerWeek * 52
+			incGross = *inc.PayPerHour * *inc.HourPerDay * income.WorkDaysPerWeek(inc) * 52
 		}
 		if incGross == 0 {
 			continue

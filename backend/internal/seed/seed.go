@@ -103,6 +103,9 @@ func seedIncome(repo income.Repository, userID int, file string) {
 		if i, ok := col["hour_per_day"]; ok && i < len(row) {
 			inc.HourPerDay = utils.CSVFloat(row[i])
 		}
+		if i, ok := col["days_per_week"]; ok && i < len(row) {
+			inc.DaysPerWeek = utils.CSVFloat(row[i])
+		}
 		if i, ok := col["annual_salary"]; ok && i < len(row) {
 			inc.AnnualSalary = utils.CSVFloat(row[i])
 		}

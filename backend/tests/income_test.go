@@ -8,9 +8,25 @@ import (
 
 func TestCalcAnnualGrossHourly(t *testing.T) {
 	got := income.CalcAnnualGross([]income.Income{{PayType: "hourly", PayPerHour: fptr(20), HourPerDay: fptr(8)}})
-	want := 20.0 * 8 * income.DaysPerWeek * 52
+	want := 20.0 * 8 * income.DefaultDaysPerWeek * 52
 	if got != want {
 		t.Fatalf("CalcAnnualGross = %v, want %v", got, want)
+	}
+}
+
+func TestCalcAnnualGrossDaysPerWeek(t *testing.T) {
+	got := income.CalcAnnualGross([]income.Income{{PayType: "hourly", PayPerHour: fptr(19), HourPerDay: fptr(11), DaysPerWeek: fptr(5)}})
+	if got != 19.0*11*5*52 {
+		t.Fatalf("CalcAnnualGross = %v, want %v", got, 19.0*11*5*52)
+	}
+}
+
+func TestWorkDaysPerWeekDefault(t *testing.T) {
+	if got := income.WorkDaysPerWeek(income.Income{}); got != income.DefaultDaysPerWeek {
+		t.Fatalf("got %v, want %v", got, income.DefaultDaysPerWeek)
+	}
+	if got := income.WorkDaysPerWeek(income.Income{DaysPerWeek: fptr(3)}); got != 3 {
+		t.Fatalf("got %v, want 3", got)
 	}
 }
 
