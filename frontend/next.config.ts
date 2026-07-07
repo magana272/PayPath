@@ -1,5 +1,4 @@
 import type { NextConfig } from "next";
-const path = require('path')
 
 const securityHeaders = [
   { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains; preload" },
@@ -11,7 +10,6 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
-  outputFileTracingRoot: path.join(__dirname, '../../'),
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },
