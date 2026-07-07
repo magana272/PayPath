@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { api } from "@/lib/api";
 import { RadialProgress } from "@/components/charts";
 import ai from "./AIInsightsTab.module.css";
@@ -82,10 +82,15 @@ function ChatBox() {
 }
 
 export default function AIInsightsTab() {
+  const [configured, setConfigured] = useState(true);
   const [insights, setInsights] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [tab, setTab] = useState("chat");
+
+  useEffect(() => {
+    api.getAIStatus().then((s) => setConfigured(s.configured)).catch(() => {});
+  }, []);
 
   const loadAI = () => {
     setLoading(true);
@@ -95,6 +100,14 @@ export default function AIInsightsTab() {
       .catch(() => setError("Could not load AI insights. Make sure the backend endpoint is available."))
       .finally(() => setLoading(false));
   };
+
+  if (!configured) {
+    return (
+      <div className={ai.promptCard}>
+        <p>AI features aren&apos;t enabled on this deployment.</p>
+      </div>
+    );
+  }
 
   return (
     <>
