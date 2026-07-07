@@ -37,6 +37,7 @@ func Setup(cfg setting.Config) *App {
 
 	reportingRepo := reporting.NewRepository(incomeRepo, expenseRepo, debtRepo, liquidRepo, derived)
 	reportingSvc := reporting.NewService(reportingRepo)
+	insightsSvc := insights.NewService(insightsRepo, reportingSvc)
 
 	deps := router.Deps{
 		Auth:        auth.NewService(authRepo, cfg.JWTSecret, reportingSvc),
@@ -48,12 +49,12 @@ func Setup(cfg setting.Config) *App {
 		Dashboard:   dashboard.NewService(reportingRepo),
 		Explore:     explore.NewService(reportingRepo),
 		Settings:    settings.NewService(reportingRepo),
-		Insights:    insights.NewService(insightsRepo, reportingSvc),
+		Insights:    insightsSvc,
 		Strategies:  strategies.NewService(insightsRepo, reportingSvc),
 		FrontendURL: cfg.FrontendURL,
 	}
 
-	seed.Run(db, authRepo, incomeRepo, expenseRepo, debtRepo, liquidRepo, insightsRepo)
+	seed.Run(db, authRepo, incomeRepo, expenseRepo, debtRepo, liquidRepo, insightsSvc)
 
 	return &App{DB: db, Deps: deps}
 }
