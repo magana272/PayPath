@@ -20,7 +20,13 @@ async function authFetch(path, opts = {}) {
     if (typeof window !== "undefined") window.location.href = "/login";
     throw new Error("Unauthorized");
   }
-  if (!res.ok) throw new Error(`API error: ${res.status}`);
+  if (!res.ok) {
+    const text = (await res.text().catch(() => "")).trim();
+    if (res.status === 403 && typeof window !== "undefined") {
+      window.dispatchEvent(new Event("paypath:demo-blocked"));
+    }
+    throw new Error(text || `API error: ${res.status}`);
+  }
   return res.json();
 }
 
