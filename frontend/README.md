@@ -6,12 +6,13 @@ Next.js app for PayPath, a personal finance dashboard. Talks to the Go API in `.
 
 - Next.js 16 (App Router) + React 19
 - CSS Modules
-- Recharts + Plotly for charts
+- Recharts for charts
 - JWT auth against the backend, token handled in `lib/auth.js`
+- Fonts self-hosted via `next/font` (no external Google Fonts request)
 
 ## Getting started
 
-Requires Node 24 (`.nvmrc` at the repo root, and the Makefile runs `nvm use 24`).
+Next.js 16 requires Node ≥ 20.9 (`.nvmrc` at the repo root pins 20; the Makefile runs `nvm use 24`, and the Docker image uses Node 24).
 
 1. Copy the env file and point it at the API:
 
@@ -65,8 +66,9 @@ The image ships Next's standalone server, which requires `output: "standalone"` 
 ```
 app/            routes (App Router)
   page.jsx        dashboard (home)
-  explore/        payoff, scenarios, cashflow, AI insights
-  calendar/       pay + bill calendar
+  explore/        tabs: debt payoff plan, cash flow (90 days), pay breakdown,
+                  tax breakdown, trends, PayPath AI
+  calendar/       bill & income calendar with per-occurrence edits
   settings/       income / expenses / debts / accounts / account tabs
   login/  setup/  auth + first-run flow
 components/     shared UI (AppShell, Sidebar, DataTable, Modal, charts, ...)
@@ -80,3 +82,33 @@ lib/
 ```
 
 `@/*` resolves to the frontend root (see `jsconfig.json`).
+
+## Screenshots
+
+The calendar shows paydays and bills on a month grid with running totals; single occurrences can be edited (move a bill, log a one-time purchase, or override one paycheck's amount), and the floating **+** quick-adds a bill, purchase, or income source from any page.
+
+<img src="../img/bill_calendar.png" alt="Bill & income calendar" width="450">
+
+<br>
+
+<img src="../img/billPurchaseIncomeTacker.png" alt="Quick add menu" width="450">
+
+Explore's Trends tab (`components/explore/TrendsTab.jsx`) charts the monthly expense breakdown, interest vs principal per payment, a cash-flow heatmap (`CalendarHeatmap.jsx`), and a pay-day waterfall (`PaydayWaterfall.jsx`); Pay and Tax Breakdown tabs cover gross vs net, effective $/hr, savings rate, and tax distribution.
+
+<img src="../img/expenseBreakdown.png" alt="Trends: expense breakdown" width="450">
+
+<br>
+
+<img src="../img/Interestvsprinciple.png" alt="Trends: interest vs principal, heatmap, waterfall" width="450">
+
+<br>
+
+<img src="../img/paybreakdown.png" alt="Pay breakdown" width="450">
+
+The PayPath AI tab (`AIInsightsTab.jsx`) renders the backend's `/api/ai/*` responses: insights with a health score, plus debt payoff strategy, savings plan, expense audit, and income boost reports.
+
+<img src="../img/personalizedFinAdvice/insights.png" alt="PayPath AI insights" width="450">
+
+<br>
+
+<img src="../img/personalizedFinAdvice/income-boost.png" alt="PayPath AI income boost" width="450">

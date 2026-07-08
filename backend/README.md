@@ -6,40 +6,40 @@ AI-powered financial insights via OpenAI. MongoDB for storage. JSON REST API con
 
 ## Tech Stack
 
-- **Language:** Go 1.22+
+- **Language:** Go 1.26
 - **Router:** `net/http` (stdlib ServeMux with method routing)
-- **Database:** MongoDB Atlas (`go.mongodb.org/mongo-driver/v2`)
+- **Database:** MongoDB — bundled Docker container or Atlas (`go.mongodb.org/mongo-driver/v2`)
 - **AI:** OpenAI GPT-4o-mini (`github.com/sashabaranov/go-openai`)
 - **Auth:** JWT (`golang-jwt/jwt/v5`) + bcrypt (`golang.org/x/crypto`)
 - **Logging:** zerolog (`github.com/rs/zerolog`)
 
 ## Project Layout
 
+Layered, feature-folder module: thin HTTP handlers call per-feature services, which depend on repository interfaces over MongoDB, with an in-memory TTL cache and singleflight read-collapsing.
+
 ```text
-paypath-go/
-├── cmd/api/main.go                  # entry point, signal handling
+backend/
+├── cmd/api/main.go        # entry point, signal handling
 ├── internal/
-│   ├── config/config.go             # env-based config
-│   ├── server/server.go             # HTTP server lifecycle
-│   ├── logger/logger.go             # zerolog setup
-│   ├── model/models.go              # struct definitions
-│   ├── store/store.go               # MongoDB init, seed, queries
-│   ├── finance/finance.go           # tax calc, debt payoff, cashflow
-│   └── api/
-│       ├── router/router.go         # route wiring, CORS, request logging
-│       └── handler/
-│           ├── respond.go           # JSON helpers, context user ID
-│           ├── auth.go              # register, login, logout, me, delete
-│           ├── expenses.go          # expense CRUD
-│           ├── debts.go             # debt CRUD
-│           ├── income.go            # income CRUD
-│           ├── liquid.go            # liquid account CRUD
-│           ├── finance.go           # summary, payoff, scenarios, cashflow, calendar
-│           ├── insights.go          # AI financial insights (OpenAI)
-│           ├── strategies.go        # AI strategies: debt, savings, expense, income
-│           └── bundle.go            # aggregated responses for frontend pages
-├── seed/                            # CSV seed data
-└── Makefile
+│   ├── config/            # env-based config
+│   ├── server/            # HTTP server lifecycle
+│   ├── api/
+│   │   ├── router/        # route wiring
+│   │   └── handler/       # thin HTTP handlers: auth, expenses, debts, income,
+│   │                      #   liquid, finance, insights, strategies, bundle
+│   ├── middleware/        # JWT auth, CORS, request logging
+│   ├── services/          # per-feature business logic
+│   │   ├── auth/  income/  expenses/  debts/
+│   │   ├── reporting/     # taxes, payoff, scenarios, cashflow, calendar
+│   │   ├── dashboard/  explore/  settings/   # per-page bundles
+│   │   └── ai/            # insights/ + strategies/ (OpenAI-backed)
+│   ├── liquid/            # liquid accounts feature
+│   ├── storage/           # Mongo init, repositories, id gen, cache/ (TTL cache)
+│   ├── clients/           # OpenAI client
+│   └── seed/              # first-run demo data loader
+├── pkg/                   # logger, response helpers, settings, utils
+├── seed/                  # CSV seed data
+└── tests/                 # integration tests
 ```
 
 ## API Endpoints
@@ -78,6 +78,10 @@ All prefixed with `/api`. JSON request/response bodies. All endpoints except aut
 | GET    | /cashflow?days=90       | 90-day cash flow projection |
 | GET    | /calendar?year=&month=  | Calendar events for a month |
 
+Payoff, scenarios, cashflow, and calendar are computed by the reporting service — taxes (federal, state, Social Security, Medicare, SDI), debt payoff timelines, and projections that honor per-occurrence calendar exceptions (moved bills, one-time purchases, income amount overrides).
+
+<img src="../img/tax.png" alt="Tax breakdown computed by the reporting service" width="450">
+
 ### AI Insights (5)
 
 | Method | Path                    | Description                   |
@@ -87,6 +91,10 @@ All prefixed with `/api`. JSON request/response bodies. All endpoints except aut
 | GET    | /ai/savings-plan        | AI savings plan               |
 | GET    | /ai/expense-audit       | AI expense audit              |
 | GET    | /ai/income-boost        | AI income boost suggestions   |
+
+These require `OPENAI_API_KEY` and power the PayPath AI tab in the frontend (screenshots in [`../img/personalizedFinAdvice/`](../img/personalizedFinAdvice/)):
+
+<img src="../img/personalizedFinAdvice/debt-payoff-strategy.png" alt="AI debt payoff strategy" width="450">
 
 ### CRUD - Expenses (3)
 
@@ -127,12 +135,17 @@ All prefixed with `/api`. JSON request/response bodies. All endpoints except aut
 
 ## Environment
 
-```env
-OPENAI_API_KEY=sk-...
-MONGODB_URI=mongodb+srv://...
-JWT_SECRET=...
-FRONTEND_URL=http://localhost:3000
-```
+Read from the root `.env` or the shell:
+
+| Variable | Purpose |
+|----------|---------|
+| `MONGODB_URI` | MongoDB connection string (Atlas or local) |
+| `JWT_SECRET` | Signing key for auth tokens |
+| `FRONTEND_URL` | Allowed CORS origin (e.g. `http://localhost:3000`) |
+| `HTTP_ADDR` | Listen address (default `:8000`) |
+| `ENV` | `development` / `production` |
+| `OPENAI_API_KEY` | Enables the `/api/ai/*` endpoints (optional) |
+| `STRIPE_*` | Stripe billing keys (optional) |
 
 ## Makefile
 
@@ -141,9 +154,12 @@ make build     # compile binary
 make run       # build and start server
 make run-dev   # build and start with request logging
 make test      # run all tests
+make check     # fmt + vet + test
+make tidy      # go mod tidy
 make clean     # remove binary
 make kill      # kill process on port 8000
 make reset     # kill + clean
+make reseed    # drop the database so it re-seeds on next start
 ```
 
 ## Docker
