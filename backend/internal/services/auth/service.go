@@ -157,6 +157,14 @@ func (s *Service) Me(token string) (*User, error) {
 	return user, nil
 }
 
+func (s *Service) IsProtected(userID int) (bool, error) {
+	user, err := s.repo.GetUserByID(userID)
+	if err != nil {
+		return false, err
+	}
+	return user != nil && user.Email == ProtectedEmail, nil
+}
+
 func (s *Service) Authenticate(token string) (int, error) {
 	claims, err := s.parseToken(token)
 	if err != nil {

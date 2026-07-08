@@ -3,6 +3,7 @@ import "./globals.css";
 import AuthProvider from "@/components/AuthProvider";
 import AuthGuard from "@/components/AuthGuard";
 import AppShell from "@/components/AppShell";
+import DemoNoticeModal from "@/components/DemoNoticeModal";
 
 const mono = IBM_Plex_Mono({
   subsets: ["latin"],
@@ -35,6 +36,7 @@ export default function RootLayout({ children }) {
         <AuthProvider>
           <AuthGuard>
             <AppShell>{children}</AppShell>
+            <DemoNoticeModal />
           </AuthGuard>
         </AuthProvider>
       </body>

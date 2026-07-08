@@ -90,7 +90,7 @@ func New(d Deps) http.Handler {
 	protected.HandleFunc("GET /api/bundle/explore", bundle.Explore)
 	protected.HandleFunc("GET /api/bundle/settings", bundle.Settings)
 
-	mux.Handle("/api/", middleware.RequireAuth(d.Auth, protected))
+	mux.Handle("/api/", middleware.RequireAuth(d.Auth, middleware.BlockProtectedWrites(d.Auth, protected)))
 
 	return middleware.Recover(middleware.RequestLogger(middleware.CORS(mux, d.FrontendURL)))
 }
