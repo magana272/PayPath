@@ -7,8 +7,42 @@ Monorepo with two apps:
 ```
 backend/    Go JSON REST API (net/http + MongoDB), serves on :8000
 frontend/   Next.js 16 + React 19 web app, serves on :3000
-docs/       design notes
+img/        screenshots used in the READMEs
 ```
+
+## Screenshots
+
+**Bill & income calendar** — paydays and bills on a month grid, with received-so-far, upcoming-income, and net-after-bills totals. Individual occurrences are editable: move a bill, log a one-time purchase, or override a single paycheck's actual amount.
+
+<img src="img/bill_calendar.png" alt="Bill & income calendar" width="450">
+
+**Quick add** — a bill (recurring expense), purchase (one-time expense), or income source can be added from any page.
+
+<img src="img/billPurchaseIncomeTacker.png" alt="Quick add menu" width="450">
+
+**Pay & tax breakdowns** — monthly/annual gross vs net, effective $/hr, savings rate, and where taxes go (federal, state, Social Security, Medicare, SDI) with the effective rate.
+
+<img src="img/paybreakdown.png" alt="Pay breakdown" width="450">
+
+<br>
+
+<img src="img/tax.png" alt="Tax breakdown" width="450">
+
+**Trends** — monthly expense breakdown, interest vs principal per debt payment, a cash-flow heatmap of the year, and a pay-day cash-flow waterfall.
+
+<img src="img/expenseBreakdown.png" alt="Monthly expense breakdown" width="450">
+
+<br>
+
+<img src="img/Interestvsprinciple.png" alt="Interest vs principal, cash-flow heatmap, pay-day waterfall" width="450">
+
+**PayPath AI** — OpenAI-backed advice grounded in your data: insights with a financial health score, strengths, and warnings, plus dedicated debt payoff strategy, savings plan, expense audit, and income boost reports.
+
+<img src="img/personalizedFinAdvice/insights.png" alt="AI insights with health score" width="450">
+
+<br>
+
+<img src="img/personalizedFinAdvice/debt-payoff-strategy.png" alt="AI debt payoff strategy" width="450">
 
 ## Quick start
 
@@ -94,7 +128,7 @@ Fonts are self-hosted via `next/font` (no external Google Fonts request).
 The two apps deploy independently to separate hosts, plus a managed database:
 
 - **Frontend → Vercel.** In the Vercel project set **Root Directory** to `frontend` — this is a monorepo, so Vercel must build from the sub-directory (a root build fails with "build script … calls `next build`"). Add the build-time env var `NEXT_PUBLIC_API_URL` = the deployed backend, e.g. `https://<your-backend>.onrender.com/api`. Vercel auto-detects Next.js and runs `next build`; no `output` override is needed.
-- **Backend → Render.** Deploy `backend/` as a Docker web service (uses `backend/Dockerfile`, listening on `:8000`). Set the environment variables from the table above — at minimum `MONGODB_URI`, `JWT_SECRET`, and `FRONTEND_URL` (the Vercel origin, so CORS allows it).
+- **Backend → Vercel.** Set the environment variables from the table above — at minimum `MONGODB_URI`, `JWT_SECRET`, and `FRONTEND_URL` (the Vercel origin, so CORS allows it).
 - **Database → MongoDB Atlas.** Point `MONGODB_URI` at your Atlas cluster; the backend seeds demo data on first run against an empty database.
 
 Both services build from `main`, so pushing redeploys the affected side. `NEXT_PUBLIC_*` values are inlined at build time, so changing the API URL requires a frontend rebuild.
